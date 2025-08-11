@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Environments
+.venv/
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# Data artifacts (keep raw, ignore processed artifacts)
+data/processed/ 
