@@ -43,6 +43,10 @@ nohup.out
 
 # Data artifacts (keep raw, ignore processed artifacts)
 data/processed/
+data/raw/*_reference.txt
+# Keep raw PDFs and manually created Markdown files, but ignore auto-generated ones
+!data/raw/*.pdf
+!data/raw/*.md
 
 # Temporary files
 *.tmp

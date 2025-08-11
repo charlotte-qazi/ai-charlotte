@@ -112,13 +112,42 @@ head -n 2 data/processed/cv_chunks.jsonl | jq .
 }
 ```
 
-### 5) Testing commands (smoke tests)
+### 5) Testing commands
+
+**Smoke tests (basic functionality):**
 - Backend:
   - Health: `curl -s http://127.0.0.1:8000/health`
   - Chat: `curl -s -X POST http://127.0.0.1:8000/api/chat -H 'Content-Type: application/json' -d '{"message": "Test"}'`
 - Frontend:
   - Browser: visit `http://127.0.0.1:5173` and send a message
   - CLI (simple check server is up): `curl -I http://127.0.0.1:5173`
+
+**Integration tests (PDF parsing quality):**
+```bash
+# Install pytest if not already installed
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Basic PDF parsing test (structure and chunking)
+pytest tests/integration/test_pdf_parsing.py -v -s
+
+# Advanced PDF quality test (requires Markdown reference)
+# Place your CV Markdown file at: data/raw/cv.md
+# Then run the quality comparison test:
+pytest tests/integration/test_pdf_quality.py -v -s
+
+# Run all tests
+pytest tests/ -v
+```
+
+**PDF parsing tests validate:**
+- ✅ Text extraction from PDF pages
+- ✅ Chunking quality and size limits  
+- ✅ JSONL output structure and content
+- ✅ Content quality (whitespace ratio, overlap)
+- ✅ **Text similarity against reference** (character/word level)
+- ✅ **Content completeness** (missing content detection)
+- ✅ **Extraction accuracy metrics** (length/word count ratios)
 
 ## Project structure
 - `backend/` FastAPI app and RAG modules
