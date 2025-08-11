@@ -67,29 +67,23 @@ npm run dev
 
 The Vite dev server proxies `/api/*` to the FastAPI backend on `127.0.0.1:8000` (see `frontend/vite.config.ts`). Ensure the backend is running first.
 
-### 4) Data ingestion (Smart document processing)
-Process your documents into semantic chunks for the RAG pipeline.
+### 4) Data ingestion (CV processing)
+Process your CV into semantic chunks optimized for RAG retrieval.
 
-- **Place your documents** in the `data/raw/` directory (supports PDF and Markdown)
-- **Run the unified processing CLI** with smart chunking:
+- **Place your CV** in the `data/raw/` directory (supports PDF and Markdown)
+- **Run the CV processing CLI** with generic chunking:
 
 ```bash
 # From repo root, with backend venv activated
 source .venv/bin/activate
 
-# Process any document (PDF or Markdown) with smart chunking
-python -m backend.cli.process_document \
-  --input data/raw/cv.pdf \
-  --target-words 200 \
-  --max-words 350
+# Process CV (PDF or Markdown) with generic CV chunking
+python -m backend.cli.process_cv data/raw/cv.pdf
 
-# Or process Markdown (auto-detects CV format)
-python -m backend.cli.process_document \
-  --input data/raw/cv.md \
-  --target-words 200 \
-  --max-words 350
+# Or process Markdown CV
+python -m backend.cli.process_cv data/raw/cv.md
 
-# Check the output (auto-generated filename)
+# Check the output (auto-generated in data/processed/)
 ls -la data/processed/
 wc -l data/processed/cv_chunks.jsonl
 head -n 2 data/processed/cv_chunks.jsonl | jq .
@@ -100,18 +94,21 @@ python -m backend.cli.embed_and_upsert \
   --collection ai_charlotte
 ```
 
-**Smart chunking features:**
-- ✅ **Semantic boundaries**: Respects job sections, headings, and logical breaks
-- ✅ **CV format detection**: Automatically detects and handles CV-specific formatting
-- ✅ **Optimal chunk sizes**: Target 200 words, max 350 words per chunk
-- ✅ **Multiple formats**: Supports both PDF and Markdown inputs
+**Generic CV chunking features:**
+- ✅ **Section-aware processing**: Detects experience, education, skills, achievements
+- ✅ **Multiple CV formats**: Works with academic, creative, executive, entry-level CVs
+- ✅ **Smart text cleaning**: Handles PDF artifacts, table formatting, whitespace
+- ✅ **Semantic chunking**: Creates meaningful chunks based on content structure
+- ✅ **Flexible input**: Supports both PDF and Markdown formats
 
-**CLI Options:**
-- `--input`: Path to input document (PDF or Markdown)
-- `--output`: Path to output JSONL (auto-generated if not specified)
-- `--target-words`: Target words per chunk (default: 200)
-- `--max-words`: Maximum words per chunk (default: 350)
-- `--source-label`: Label to attach to chunks (auto-generated if not specified)
+**CLI Usage:**
+```bash
+python -m backend.cli.process_cv <input_file> [--output <output_file>]
+```
+
+**Options:**
+- `input_file`: Path to CV (PDF or Markdown)
+- `--output`: Output JSONL path (optional, auto-generated if not specified)
 
 **Output format:** Each line in the JSONL contains:
 ```json
@@ -121,11 +118,11 @@ python -m backend.cli.embed_and_upsert \
   "text": "...semantic chunk content...",
   "source": "cv",
   "heading": "Professional Experience",
-  "chunk_type": "job",
-  "word_count": 185,
+  "chunk_type": "experience",
+  "word_count": 95,
   "metadata": {
     "filename": "cv.pdf",
-    "smart_chunking": true,
+    "processing_method": "cv_chunker",
     "source_format": "pdf"
   }
 }
@@ -141,32 +138,57 @@ python -m backend.cli.embed_and_upsert \
   - Browser: visit `http://127.0.0.1:5173` and send a message
   - CLI (simple check server is up): `curl -I http://127.0.0.1:5173`
 
-**Integration tests (PDF parsing quality):**
+**RAG System Evaluation (comprehensive chatbot testing):**
 ```bash
-# Install pytest if not already installed
+# Install test dependencies
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Basic PDF parsing test (structure and chunking)
-pytest tests/integration/test_pdf_parsing.py -v -s
+# Run comprehensive RAG evaluation (requires API server running)
+pytest tests/test_rag_evaluation.py -v -s
 
-# Advanced PDF quality test (requires Markdown reference)
-# Place your CV Markdown file at: data/raw/cv.md
-# Then run the quality comparison test:
-pytest tests/integration/test_pdf_quality.py -v -s
+# Test specific components
+pytest tests/test_rag_evaluation.py::TestRAGEvaluation::test_individual_questions -v -s
+pytest tests/test_rag_evaluation.py::TestRAGEvaluation::test_edge_cases -v -s
+pytest tests/test_rag_evaluation.py::TestRAGEvaluation::test_response_quality_metrics -v -s
+
+# Run chunking tests
+pytest tests/test_cv_chunker.py -v -s
+pytest tests/test_cv_formats.py -v -s
 
 # Run all tests
 pytest tests/ -v
 ```
 
-**PDF parsing tests validate:**
-- ✅ Text extraction from PDF pages
-- ✅ Chunking quality and size limits  
-- ✅ JSONL output structure and content
-- ✅ Content quality (whitespace ratio, overlap)
-- ✅ **Text similarity against reference** (character/word level)
-- ✅ **Content completeness** (missing content detection)
-- ✅ **Extraction accuracy metrics** (length/word count ratios)
+**RAG evaluation tests validate:**
+- ✅ **Question answering accuracy** (8 realistic CV questions)
+- ✅ **Response quality metrics** (keyword matching, completeness, speed)
+- ✅ **Edge case handling** (unknown topics, graceful fallbacks)
+- ✅ **Performance by category** (experience, skills, education, leadership)
+- ✅ **Performance by difficulty** (easy, medium, hard questions)
+- ✅ **API health and structure** (response format, error handling)
+- ✅ **Grading system** (A+ to D based on success rate and quality)
+
+**Example RAG evaluation output:**
+```
+🎯 RAG SYSTEM EVALUATION REPORT
+============================================================
+📊 Overall Performance:
+   Success Rate: 75.0% (6/8)
+   Average Score: 0.63/1.0
+   Keyword Match Rate: 0.61/1.0
+   Average Response Time: 2.00s
+
+🎓 RAG System Grade: B (Good)
+============================================================
+```
+
+**CV Chunking tests validate:**
+- ✅ **Generic CV processing** (works with different CV formats)
+- ✅ **Section detection** (experience, education, skills, achievements)
+- ✅ **Chunk quality** (appropriate sizes, meaningful boundaries)
+- ✅ **Content preservation** (no loss of important information)
+- ✅ **Metadata extraction** (headings, chunk types, word counts)
 
 ## Project structure
 - `backend/` FastAPI app and RAG modules
@@ -206,7 +228,11 @@ For the current mock chat, these are not required. For embeddings and vector sto
 ## Roadmap (next steps)
 - ✅ Implement PDF ingestion and chunking for CV
 - ✅ Add OpenAI embeddings and Qdrant upsert
-- Build retrieval + prompt construction  
-- Replace mock `/api/chat` with real RAG pipeline output
+- ✅ Build retrieval + prompt construction  
+- ✅ Replace mock `/api/chat` with real RAG pipeline output
+- ✅ Add comprehensive RAG system evaluation tests
+- ✅ Generic CV chunking for multiple formats
 - Add ingestion for Medium blog posts, GitHub, LinkedIn, YouTube
-- Add tests (unit + integration) and Docker setup 
+- Add Docker setup and deployment configuration
+- Improve education content retrieval (identified via testing)
+- Add conversation memory and context awareness 
