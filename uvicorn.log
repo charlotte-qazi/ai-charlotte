@@ -10,3 +10,4 @@ INFO:     127.0.0.1:58746 - "GET /api/chat HTTP/1.1" 405 Method Not Allowed
 INFO:     127.0.0.1:58746 - "GET /api/chat HTTP/1.1" 405 Method Not Allowed
 INFO:     127.0.0.1:59138 - "POST /chat HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:59404 - "POST /chat HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59803 - "POST /api/chat HTTP/1.1" 200 OK
