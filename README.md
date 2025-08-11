@@ -89,6 +89,11 @@ python -m backend.cli.process_pdf \
 ls -la data/processed/
 wc -l data/processed/cv_chunks.jsonl
 head -n 2 data/processed/cv_chunks.jsonl | jq .
+
+# Embed chunks and upsert to Qdrant (requires OpenAI and Qdrant credentials in .env)
+python -m backend.cli.embed_and_upsert \
+  --input data/processed/cv_chunks.jsonl \
+  --collection ai_charlotte
 ```
 
 **CLI Options:**
@@ -168,10 +173,13 @@ Edit `.env` with the following variables when implementing the real RAG pipeline
 OPENAI_API_KEY=
 QDRANT_URL=
 QDRANT_API_KEY=
-QDRANT_COLLECTION=personal_docs
+QDRANT_COLLECTION=ai_charlotte
 ```
 
-For the current mock chat, these are not required.
+For the current mock chat, these are not required. For embeddings and vector storage, you'll need:
+- `OPENAI_API_KEY`: Your OpenAI API key for embeddings
+- `QDRANT_URL`: Your Qdrant Cloud URL (e.g., `https://xyz.us-east4-0.gcp.cloud.qdrant.io:6333`)
+- `QDRANT_API_KEY`: Your Qdrant Cloud API key
 
 ## Troubleshooting
 - Port in use:
@@ -183,7 +191,7 @@ For the current mock chat, these are not required.
 
 ## Roadmap (next steps)
 - ✅ Implement PDF ingestion and chunking for CV
-- Add OpenAI embeddings and Qdrant upsert
+- ✅ Add OpenAI embeddings and Qdrant upsert
 - Build retrieval + prompt construction  
 - Replace mock `/api/chat` with real RAG pipeline output
 - Add ingestion for Medium blog posts, GitHub, LinkedIn, YouTube

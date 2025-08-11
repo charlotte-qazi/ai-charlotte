@@ -1,6 +1,6 @@
 from typing import List
 
-
+# Splits text into chunks of a maximum length (1200 characters by default), with an overlap (of 200 characters by default) between chunks
 class TextChunker:
     def __init__(self, max_chars: int = 1200, overlap_chars: int = 200) -> None:
         self.max_chars = max_chars
