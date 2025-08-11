@@ -245,3 +245,14 @@ This is Charlotte's personal chatbot project. For setting up your own version:
 ## License
 
 This project is for educational and portfolio purposes. 
+
+## Disclaimer
+
+This project was created by Charlotte Qazi for learning and demonstration purposes.
+
+You are welcome to fork and adapt it under the terms of the MIT license.  
+However, please do **not upload other people's documents** (e.g., CVs) without explicit consent.
+
+This project is intended for personal and responsible use only, such as exploring your own data, learning about RAG, or testing with non-sensitive content.
+
+I take no responsibility for any misuse of this code or its components. If you choose to deploy or extend this project, you are solely responsible for ensuring it complies with relevant laws, platform policies, and ethical practices
