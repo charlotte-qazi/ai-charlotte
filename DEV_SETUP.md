@@ -248,7 +248,59 @@ curl -s -X POST http://127.0.0.1:8000/api/chat \
   -d '{"message": "What is my professional experience?"}' | jq .
 ```
 
-## 6. Test Your RAG System
+## 6. Add Your Medium Blog (Optional)
+
+If you have a Medium blog, you can add your articles to the RAG system:
+
+### Process Medium Blog Posts
+```bash
+# Activate environment
+source .venv/bin/activate
+
+# Process your Medium blog posts (replace @username with your Medium username)
+python -m backend.cli.process_medium @username
+
+# Or use the full RSS URL
+python -m backend.cli.process_medium https://medium.com/feed/@username
+
+# Example with Charlotte's blog
+python -m backend.cli.process_medium @charlotteqazi --max-posts 10
+```
+
+### Add Blog Posts to Vector Database
+```bash
+# Embed and add to vector database (adjust filename as needed)
+python -m backend.cli.embed_and_upsert \
+  --input data/processed/your-name_medium_chunks.jsonl \
+  --collection ai_charlotte
+```
+
+### Medium RSS URL Format
+- Your Medium RSS feed is always: `https://medium.com/feed/@yourusername`
+- You can also just provide `@yourusername` and the tool will convert it automatically
+- The tool will fetch your latest posts, clean the content, and chunk them appropriately
+
+### Troubleshooting Medium Import
+If you encounter SSL errors:
+```bash
+# Test your Medium RSS feed manually
+curl -s "https://medium.com/feed/@yourusername" | head -20
+
+# The tool uses proper SSL verification by default for security
+# If you need to bypass SSL in development (NOT recommended for production):
+export VERIFY_SSL=false
+python -m backend.cli.process_medium @yourusername
+
+# For production, always keep SSL verification enabled (default)
+unset VERIFY_SSL  # or export VERIFY_SSL=true
+```
+
+**SSL Configuration:**
+- **Production**: SSL verification is enabled by default using system certificates
+- **Development**: Can be disabled via `VERIFY_SSL=false` environment variable
+- **Security**: Never disable SSL verification in production environments
+
+## 7. Test Your RAG System
 
 ### Run Comprehensive Tests
 ```bash

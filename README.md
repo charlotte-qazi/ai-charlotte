@@ -61,10 +61,20 @@ npm run dev
 ## Example Queries
 
 Try asking Charlotte's chatbot:
+
+**About Professional Experience:**
 - "What is Charlotte's experience at BCG?"
 - "What are Charlotte's technical skills?"
 - "Tell me about Charlotte's AI projects"
 - "What leadership experience does Charlotte have?"
+
+**About Blog Content & Insights:**
+- "What are your thoughts on building Gen AI for humans?"
+- "What did you learn at Google Women Developer Academy?"
+- "Why is accessibility important in development?"
+- "What impact does coding have on mental health?"
+
+**General Questions:**
 - "How did Charlotte transition into tech?"
 - "Has Charlotte given any presentations?"
 
@@ -107,6 +117,9 @@ pytest tests/test_current_cv.py -v -s
 
 # Full RAG system evaluation
 pytest tests/test_rag_evaluation.py -v -s
+
+# Test Medium blog integration
+pytest tests/test_medium_integration.py -v -s
 
 # Test specific components
 pytest tests/test_rag_evaluation.py::TestRAGEvaluation::test_individual_questions -v -s
@@ -151,7 +164,8 @@ Sample evaluation output:
 
 ### Data Pipeline
 - **Raw CV**: `data/raw/cv.pdf` (Charlotte's CV)
-- **Processed Chunks**: `data/processed/cv_chunks.jsonl` (semantic chunks)
+- **Medium Blog**: Auto-processed from RSS feed (`@charlotteqazi`)
+- **Processed Chunks**: `data/processed/` (semantic chunks from CV and blog posts)
 - **Vector Database**: Qdrant collection with embedded chunks
 - **Retrieval**: Semantic search for relevant context
 - **Generation**: OpenAI GPT-3.5-turbo for responses
@@ -160,7 +174,8 @@ Sample evaluation output:
 
 ### ✅ Implemented
 - **Generic CV Processing**: Handles multiple CV formats and styles
-- **Semantic Chunking**: Creates meaningful content boundaries
+- **Medium Blog Integration**: Automatic RSS feed processing and chunking
+- **Semantic Chunking**: Creates meaningful content boundaries for CVs and blog posts
 - **Vector Retrieval**: Fast similarity search with Qdrant
 - **Context-Aware Generation**: GPT-3.5-turbo with retrieved context
 - **Comprehensive Testing**: Automated evaluation with grading
