@@ -3,261 +3,315 @@ from typing import Any, Dict, List
 
 
 class SmartChunker:
-    def __init__(self, target_words: int = 200, max_words: int = 350) -> None:
+    def __init__(self, target_words: int = 100, max_words: int = 150) -> None:
+        """Reduced chunk sizes for better granularity"""
         self.target_words = target_words
         self.max_words = max_words
 
     def chunk_cv_markdown(self, text: str) -> List[Dict[str, Any]]:
-        """Smart chunking for CV format with bold headings and job sections."""
+        """Enhanced CV chunking with better job and education detection."""
         chunks = []
         
-        # Split by major sections first
-        # Look for patterns like "**Professional Experience**" or "---"
-        sections = re.split(r'\n\s*---\s*\n|\n\s*\*\*([^*]+)\*\*\s*\n', text)
+        # Clean up the text first
+        text = self._clean_markdown_text(text)
         
-        current_heading = "Profile"
+        # Split by major sections using multiple patterns
+        section_patterns = [
+            r'\n\s*---\s*\n',  # Horizontal rules
+            r'\n\s*\*\*([^*]+)\*\*\s*\n',  # Bold headings like **Professional Experience**
+            r'\n\s*#+\s*([^\n]+)\n',  # Markdown headers like ## Education
+        ]
         
-        for i, section in enumerate(sections):
-            section = section.strip()
-            if not section:
+        sections = self._split_by_patterns(text, section_patterns)
+        
+        for section_info in sections:
+            section_text = section_info['text'].strip()
+            section_heading = section_info.get('heading', 'Unknown')
+            
+            if len(section_text.split()) < 10:  # Skip very short sections
                 continue
             
-            # If this section is very short, it might be a heading
-            words = section.split()
-            if len(words) <= 5 and any(keyword in section.lower() for keyword in 
-                                     ['experience', 'education', 'skills', 'projects', 'contact']):
-                current_heading = section
-                continue
+            # Handle different section types
+            if any(keyword in section_heading.lower() for keyword in ['experience', 'work', 'career']):
+                section_chunks = self._chunk_experience_section(section_text, section_heading)
+            elif any(keyword in section_heading.lower() for keyword in ['education', 'qualifications', 'degree']):
+                section_chunks = self._chunk_education_section(section_text, section_heading)
+            elif any(keyword in section_heading.lower() for keyword in ['skills', 'expertise', 'technologies']):
+                section_chunks = self._chunk_skills_section(section_text, section_heading)
+            else:
+                section_chunks = self._chunk_general_section(section_text, section_heading)
             
-            # Skip very short sections
-            if len(words) < 20:
-                continue
-            
-            # Now chunk this section intelligently
-            section_chunks = self._chunk_section_by_jobs(section, current_heading)
             chunks.extend(section_chunks)
         
         return chunks
 
-    def chunk_markdown(self, text: str) -> List[Dict[str, Any]]:
-        """Smart chunking for general Markdown with headers."""
-        chunks = []
-        lines = text.split('\n')
+    def _clean_markdown_text(self, text: str) -> str:
+        """Clean up markdown formatting issues."""
+        # Fix table formatting issues
+        text = re.sub(r'\|\s*\|\s*', ' ', text)
+        text = re.sub(r'\|\s*:\-+\s*\|\s*', ' ', text)
+        text = re.sub(r'\|\s*', ' ', text)
         
-        current_section = {'heading': 'Introduction', 'content': [], 'level': 0, 'start': 0}
+        # Clean up multiple spaces and newlines
+        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r'\n\s*\n', '\n\n', text)
         
-        for i, line in enumerate(lines):
-            line_stripped = line.strip()
-            
-            # Skip empty lines and comments
-            if not line_stripped or line_stripped.startswith('<!--') or line_stripped.endswith('-->'):
-                continue
-            
-            # Check for markdown headers
-            header_match = re.match(r'^(#{1,6})\s+(.+)$', line_stripped)
-            
-            if header_match:
-                # Save previous section if it has substantial content
-                if current_section['content']:
-                    section_text = '\n'.join(current_section['content']).strip()
-                    words = section_text.split()
-                    if len(words) > 10:  # At least 10 words
-                        if len(words) <= self.max_words:
-                            chunks.append({
-                                'text': section_text,
-                                'heading': current_section['heading'],
-                                'level': current_section['level'],
-                                'type': 'markdown_section',
-                                'word_count': len(words),
-                                'start_line': current_section['start'],
-                                'end_line': i - 1
-                            })
-                        else:
-                            # Split large sections
-                            sub_chunks = self._split_large_section(
-                                section_text, current_section['heading']
-                            )
-                            chunks.extend(sub_chunks)
-                
-                # Start new section
-                level = len(header_match.group(1))
-                heading = header_match.group(2).strip()
-                current_section = {
-                    'heading': heading,
-                    'content': [line],
-                    'level': level,
-                    'start': i
-                }
-            else:
-                current_section['content'].append(line)
-        
-        # Don't forget the last section
-        if current_section['content']:
-            section_text = '\n'.join(current_section['content']).strip()
-            words = section_text.split()
-            if len(words) > 10:
-                if len(words) <= self.max_words:
-                    chunks.append({
-                        'text': section_text,
-                        'heading': current_section['heading'],
-                        'level': current_section['level'],
-                        'type': 'markdown_section',
-                        'word_count': len(words),
-                        'start_line': current_section['start'],
-                        'end_line': len(lines) - 1
-                    })
-                else:
-                    sub_chunks = self._split_large_section(
-                        section_text, current_section['heading']
-                    )
-                    chunks.extend(sub_chunks)
-        
-        return chunks
+        return text.strip()
 
-    def _chunk_section_by_jobs(self, text: str, section_heading: str) -> List[Dict[str, Any]]:
-        """Chunk a section by detecting job roles and logical breaks."""
+    def _split_by_patterns(self, text: str, patterns: List[str]) -> List[Dict[str, Any]]:
+        """Split text by multiple patterns and extract headings."""
+        sections = []
+        current_pos = 0
+        current_heading = "Introduction"
+        
+        # Find all matches for all patterns
+        all_matches = []
+        for pattern in patterns:
+            for match in re.finditer(pattern, text):
+                heading = match.group(1) if match.groups() else "Section"
+                all_matches.append({
+                    'start': match.start(),
+                    'end': match.end(),
+                    'heading': heading.strip(),
+                    'full_match': match.group(0)
+                })
+        
+        # Sort matches by position
+        all_matches.sort(key=lambda x: x['start'])
+        
+        # Extract sections
+        for i, match in enumerate(all_matches):
+            # Add text before this match as a section
+            if match['start'] > current_pos:
+                section_text = text[current_pos:match['start']].strip()
+                if section_text and len(section_text.split()) > 5:
+                    sections.append({
+                        'text': section_text,
+                        'heading': current_heading
+                    })
+            
+            # Update current heading and position
+            current_heading = match['heading']
+            current_pos = match['end']
+        
+        # Add final section
+        if current_pos < len(text):
+            section_text = text[current_pos:].strip()
+            if section_text and len(section_text.split()) > 5:
+                sections.append({
+                    'text': section_text,
+                    'heading': current_heading
+                })
+        
+        return sections
+
+    def _chunk_experience_section(self, text: str, heading: str) -> List[Dict[str, Any]]:
+        """Chunk experience section by individual jobs."""
         chunks = []
         
-        # Split by job patterns - look for bold job titles or company names
+        # Look for job patterns: company names, dates, job titles
         job_patterns = [
-            r'\n\s*\*\*([^*]+)\*\*\s*\n',  # **Job Title**
-            r'\n([A-Z][^.!?]*(?:Engineer|Developer|Manager|Analyst|Consultant|Lead|Director)[^.!?]*)\n',
-            r'\n([A-Z][^.!?]*(?:BCG|Google|Microsoft|Amazon|Apple)[^.!?]*)\n',
+            r'([A-Z][^,\n]*(?:Ltd|Inc|Corp|Company|Group|X|Ventures|Events)[^,\n]*),?\s*([^|]*)\s*\|\s*([^|]*)',
+            r'([A-Z][^,\n]*),\s*([^|]*)\s*\|\s*([^|]*)',
+            r'\*\*([^*]+)\*\*[^|]*\|[^|]*\|[^|]*',
         ]
         
-        # Try to split by job sections
-        parts = []
+        # Split by job entries
+        job_sections = []
         remaining_text = text
         
-        for pattern in job_patterns:
-            matches = list(re.finditer(pattern, remaining_text, re.IGNORECASE))
-            if matches:
-                last_end = 0
-                for match in matches:
-                    # Add text before this match
-                    if match.start() > last_end:
-                        before_text = remaining_text[last_end:match.start()].strip()
-                        if before_text and len(before_text.split()) > 10:
-                            parts.append({
-                                'text': before_text,
-                                'type': 'content',
-                                'heading': section_heading
-                            })
-                    
-                    # Add the job section (from match to next match or end)
-                    next_match_start = matches[matches.index(match) + 1].start() if matches.index(match) + 1 < len(matches) else len(remaining_text)
-                    job_text = remaining_text[match.start():next_match_start].strip()
-                    
-                    if job_text and len(job_text.split()) > 15:
-                        job_title = match.group(1) if match.groups() else "Job Section"
-                        parts.append({
-                            'text': job_text,
-                            'type': 'job',
-                            'heading': f"{section_heading}: {job_title}",
-                            'job_title': job_title
-                        })
-                    
-                    last_end = next_match_start
-                
-                # Add any remaining text
-                if last_end < len(remaining_text):
-                    remaining_text_part = remaining_text[last_end:].strip()
-                    if remaining_text_part and len(remaining_text_part.split()) > 10:
-                        parts.append({
-                            'text': remaining_text_part,
-                            'type': 'content',
-                            'heading': section_heading
-                        })
-                break
-        
-        # If no job patterns found, split by paragraphs
-        if not parts:
-            paragraphs = re.split(r'\n\s*\n', text)
-            current_chunk = ""
-            chunk_count = 0
-            
-            for paragraph in paragraphs:
-                paragraph = paragraph.strip()
-                if not paragraph:
-                    continue
-                
-                # Would adding this paragraph exceed max words?
-                combined = (current_chunk + "\n\n" + paragraph).strip()
-                if len(combined.split()) > self.max_words and len(current_chunk.split()) >= 50:
-                    parts.append({
-                        'text': current_chunk.strip(),
-                        'type': 'content',
-                        'heading': f"{section_heading}" + (f" (Part {chunk_count + 1})" if chunk_count > 0 else "")
-                    })
-                    chunk_count += 1
-                    current_chunk = paragraph
-                else:
-                    current_chunk = combined
-            
-            # Add the last chunk
-            if current_chunk and len(current_chunk.split()) >= 20:
-                parts.append({
-                    'text': current_chunk.strip(),
-                    'type': 'content',
-                    'heading': f"{section_heading}" + (f" (Part {chunk_count + 1})" if chunk_count > 0 else "")
-                })
-        
-        # Convert parts to chunks
-        for part in parts:
-            word_count = len(part['text'].split())
-            if word_count >= 20:  # Only include substantial chunks
-                chunks.append({
-                    'text': part['text'],
-                    'heading': part['heading'],
-                    'type': part['type'],
-                    'word_count': word_count,
-                    'parent_heading': section_heading
-                })
-        
-        return chunks
-
-    def _split_large_section(self, text: str, heading: str) -> List[Dict[str, Any]]:
-        """Split a large section into smaller pieces while preserving context."""
-        chunks = []
-        paragraphs = re.split(r'\n\s*\n', text)
-        
-        current_chunk = ""
-        chunk_counter = 0
+        # Try to identify individual job entries
+        paragraphs = text.split('\n\n')
+        current_job = ""
         
         for paragraph in paragraphs:
             paragraph = paragraph.strip()
             if not paragraph:
                 continue
             
-            # If adding this paragraph would exceed max size, save current chunk
-            combined = (current_chunk + "\n\n" + paragraph).strip()
-            if len(combined.split()) > self.max_words and len(current_chunk.split()) >= 50:
+            # Check if this looks like a new job (has company name pattern)
+            is_new_job = any(re.search(pattern, paragraph) for pattern in job_patterns)
+            
+            if is_new_job and current_job and len(current_job.split()) > 15:
+                job_sections.append(current_job.strip())
+                current_job = paragraph
+            else:
+                current_job += "\n\n" + paragraph if current_job else paragraph
+        
+        # Add the last job
+        if current_job and len(current_job.split()) > 15:
+            job_sections.append(current_job.strip())
+        
+        # If no clear job sections found, split by size
+        if not job_sections:
+            size_chunks = self._split_by_size(text, self.max_words, heading)
+            job_sections = [chunk['text'] for chunk in size_chunks]
+        
+        # Create chunks for each job
+        for i, job_text in enumerate(job_sections):
+            words = job_text.split()
+            if len(words) < 10:  # Skip very short sections
+                continue
+            
+            # Extract company name for better heading
+            company_match = re.search(r'^([^,|\n]+)', job_text.strip())
+            job_heading = company_match.group(1).strip() if company_match else f"{heading} (Job {i+1})"
+            
+            chunks.append({
+                'text': job_text,
+                'heading': job_heading,
+                'type': 'job_experience',
+                'word_count': len(words),
+                'parent_heading': heading
+            })
+        
+        return chunks
+
+    def _chunk_education_section(self, text: str, heading: str) -> List[Dict[str, Any]]:
+        """Chunk education section by degrees/institutions."""
+        chunks = []
+        
+        # Look for education patterns: universities, degrees, dates
+        edu_patterns = [
+            r'([^,\n]*(?:University|College|School|Institute)[^,\n]*)',
+            r'([^,\n]*(?:BSc|MSc|BA|MA|PhD|Degree)[^,\n]*)',
+            r'([^|]*)\s*\|\s*([^|]*)',  # Institution | Degree pattern
+        ]
+        
+        # Split by educational entries
+        paragraphs = text.split('\n\n')
+        current_edu = ""
+        edu_sections = []
+        
+        for paragraph in paragraphs:
+            paragraph = paragraph.strip()
+            if not paragraph:
+                continue
+            
+            # Check if this looks like a new education entry
+            is_new_edu = any(re.search(pattern, paragraph, re.IGNORECASE) for pattern in edu_patterns)
+            
+            if is_new_edu and current_edu and len(current_edu.split()) > 10:
+                edu_sections.append(current_edu.strip())
+                current_edu = paragraph
+            else:
+                current_edu += "\n\n" + paragraph if current_edu else paragraph
+        
+        # Add the last education entry
+        if current_edu and len(current_edu.split()) > 10:
+            edu_sections.append(current_edu.strip())
+        
+        # If no clear education sections, treat as single chunk
+        if not edu_sections and len(text.split()) > 10:
+            edu_sections = [text]
+        
+        # Create chunks for each education entry
+        for i, edu_text in enumerate(edu_sections):
+            words = edu_text.split()
+            if len(words) < 5:
+                continue
+            
+            # Extract institution name for better heading
+            institution_match = re.search(r'([^,|\n]*(?:University|College|School|Institute)[^,|\n]*)', edu_text, re.IGNORECASE)
+            edu_heading = institution_match.group(1).strip() if institution_match else f"{heading} ({i+1})"
+            
+            chunks.append({
+                'text': edu_text,
+                'heading': edu_heading,
+                'type': 'education',
+                'word_count': len(words),
+                'parent_heading': heading
+            })
+        
+        return chunks
+
+    def _chunk_skills_section(self, text: str, heading: str) -> List[Dict[str, Any]]:
+        """Chunk skills section by skill categories."""
+        chunks = []
+        
+        # Look for skill categories or bullet points
+        skill_categories = re.split(r'\n\s*[\*\-•]\s*', text)
+        
+        current_chunk = ""
+        chunk_count = 0
+        
+        for category in skill_categories:
+            category = category.strip()
+            if not category:
+                continue
+            
+            # If adding this category would exceed max words, create a new chunk
+            combined = (current_chunk + "\n• " + category).strip()
+            if len(combined.split()) > self.max_words and len(current_chunk.split()) > 20:
                 chunks.append({
                     'text': current_chunk.strip(),
-                    'heading': f"{heading}" + (f" (Part {chunk_counter + 1})" if chunk_counter > 0 else ""),
-                    'type': 'smart_section',
+                    'heading': f"{heading} (Part {chunk_count + 1})" if chunk_count > 0 else heading,
+                    'type': 'skills',
                     'word_count': len(current_chunk.split()),
                     'parent_heading': heading
                 })
-                chunk_counter += 1
+                chunk_count += 1
+                current_chunk = "• " + category
+            else:
+                current_chunk = combined
+        
+        # Add the last chunk
+        if current_chunk and len(current_chunk.split()) > 10:
+            chunks.append({
+                'text': current_chunk.strip(),
+                'heading': f"{heading} (Part {chunk_count + 1})" if chunk_count > 0 else heading,
+                'type': 'skills',
+                'word_count': len(current_chunk.split()),
+                'parent_heading': heading
+            })
+        
+        return chunks
+
+    def _chunk_general_section(self, text: str, heading: str) -> List[Dict[str, Any]]:
+        """Chunk general sections by paragraphs and size."""
+        return self._split_by_size(text, self.max_words, heading)
+
+    def _split_by_size(self, text: str, max_words: int, heading: str = "Content") -> List[Dict[str, Any]]:
+        """Split text by size while respecting paragraph boundaries."""
+        chunks = []
+        paragraphs = text.split('\n\n')
+        
+        current_chunk = ""
+        chunk_count = 0
+        
+        for paragraph in paragraphs:
+            paragraph = paragraph.strip()
+            if not paragraph:
+                continue
+            
+            # Check if adding this paragraph would exceed max words
+            combined = (current_chunk + "\n\n" + paragraph).strip()
+            if len(combined.split()) > max_words and len(current_chunk.split()) > 20:
+                chunks.append({
+                    'text': current_chunk.strip(),
+                    'heading': f"{heading} (Part {chunk_count + 1})" if chunk_count > 0 else heading,
+                    'type': 'content',
+                    'word_count': len(current_chunk.split()),
+                    'parent_heading': heading
+                })
+                chunk_count += 1
                 current_chunk = paragraph
             else:
                 current_chunk = combined
         
         # Add the last chunk
-        if current_chunk and len(current_chunk.split()) >= 20:
+        if current_chunk and len(current_chunk.split()) > 10:
             chunks.append({
                 'text': current_chunk.strip(),
-                'heading': f"{heading}" + (f" (Part {chunk_counter + 1})" if chunk_counter > 0 else ""),
-                'type': 'smart_section',
+                'heading': f"{heading} (Part {chunk_count + 1})" if chunk_count > 0 else heading,
+                'type': 'content',
                 'word_count': len(current_chunk.split()),
                 'parent_heading': heading
             })
         
-        return chunks if chunks else [{
-            'text': text,
-            'heading': heading,
-            'type': 'smart_section',
-            'word_count': len(text.split()),
-            'parent_heading': heading
-        }] 
+        return chunks
+
+    def chunk_markdown(self, text: str) -> List[Dict[str, Any]]:
+        """Smart chunking for general Markdown with headers."""
+        # Use the same improved logic as CV chunking
+        return self.chunk_cv_markdown(text) 

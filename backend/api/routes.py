@@ -24,7 +24,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
         response = await rag_service.answer_question(
             question=request.message,
             top_k=3,  # Retrieve top 3 most relevant chunks
-            min_score=0.4  # Minimum similarity score (lowered for better recall)
+            min_score=0.3  # Minimum similarity score (lowered further for better recall)
         )
         
         return response
