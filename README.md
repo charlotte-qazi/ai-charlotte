@@ -102,6 +102,9 @@ curl -s http://127.0.0.1:8000/health | jq .
 ```bash
 source .venv/bin/activate
 
+# Test the current CV in data/raw/ (automatic discovery)
+pytest tests/test_current_cv.py -v -s
+
 # Full RAG system evaluation
 pytest tests/test_rag_evaluation.py -v -s
 

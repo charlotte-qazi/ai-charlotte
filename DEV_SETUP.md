@@ -255,11 +255,39 @@ curl -s -X POST http://127.0.0.1:8000/api/chat \
 # Activate environment
 source .venv/bin/activate
 
+# Test your specific CV (automatically detects CV in data/raw/)
+pytest tests/test_current_cv.py -v -s
+
 # Run RAG evaluation tests
 pytest tests/test_rag_evaluation.py -v -s
 
 # Run CV chunking tests
 pytest tests/test_cv_chunker.py -v -s
+
+# Run all tests
+pytest tests/ -v
+```
+
+**What the current CV test validates:**
+- ✅ **Automatic CV Discovery**: Finds your CV in `data/raw/` regardless of filename
+- ✅ **File Accessibility**: Ensures CV is readable and has content
+- ✅ **Chunking Quality**: Tests that your CV chunks appropriately (2+ chunks, reasonable sizes)
+- ✅ **Content Coverage**: Validates professional content (experience, skills, education)
+- ✅ **CLI Processing**: Tests the complete `process_cv` command with your CV
+- ✅ **Embedding Compatibility**: Ensures chunks work with OpenAI embeddings
+- ✅ **End-to-End RAG**: Tests the complete pipeline with generic questions
+
+**Example output:**
+```
+✅ Found CV: my-resume.pdf
+   Format: pdf
+   Size: 245,832 bytes
+
+✅ CV chunking successful:
+   Chunks: 8
+   Average words: 89.3
+   Chunk types: {'experience', 'skills', 'education'}
+   Sample headings: ['Professional Experience', 'Technical Skills', 'Education']
 ```
 
 ### Customize Test Questions
