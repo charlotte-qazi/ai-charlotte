@@ -41,3 +41,10 @@ Build a personal chatbot using Retrieval-Augmented Generation (RAG) to answer qu
 - FastAPI: Clean, modern async Python web framework, easy to scale, test, and structure modularly
 - React is a flexible, widely supported frontend framework
 - MUI provides clean, production-quality components out of the box for fast iteration and professional looking styling
+
+### Chunking Strategy
+
+#### Decision: Semantic chunking via MD file
+
+- Moved from fixed size (1200 chars) overlapping (200 chars) chunking as chunks covered too many topics due to strict chunk size
+- Semantic chunking from a markdown file creates logical breaks at sections and content boundaries

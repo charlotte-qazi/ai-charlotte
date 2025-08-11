@@ -67,25 +67,29 @@ npm run dev
 
 The Vite dev server proxies `/api/*` to the FastAPI backend on `127.0.0.1:8000` (see `frontend/vite.config.ts`). Ensure the backend is running first.
 
-### 4) Data ingestion (PDF processing)
-Process your documents into text chunks for the RAG pipeline.
+### 4) Data ingestion (Smart document processing)
+Process your documents into semantic chunks for the RAG pipeline.
 
-- **Place your PDF** in the `data/raw/` directory (e.g., `data/raw/cv.pdf`)
-- **Run the ingestion CLI** to chunk the PDF into JSONL format:
+- **Place your documents** in the `data/raw/` directory (supports PDF and Markdown)
+- **Run the unified processing CLI** with smart chunking:
 
 ```bash
 # From repo root, with backend venv activated
 source .venv/bin/activate
 
-# Process PDF into chunks
-python -m backend.cli.process_pdf \
+# Process any document (PDF or Markdown) with smart chunking
+python -m backend.cli.process_document \
   --input data/raw/cv.pdf \
-  --output data/processed/cv_chunks.jsonl \
-  --max-chars 1200 \
-  --overlap-chars 200 \
-  --source-label "cv"
+  --target-words 200 \
+  --max-words 350
 
-# Check the output
+# Or process Markdown (auto-detects CV format)
+python -m backend.cli.process_document \
+  --input data/raw/cv.md \
+  --target-words 200 \
+  --max-words 350
+
+# Check the output (auto-generated filename)
 ls -la data/processed/
 wc -l data/processed/cv_chunks.jsonl
 head -n 2 data/processed/cv_chunks.jsonl | jq .
@@ -96,23 +100,33 @@ python -m backend.cli.embed_and_upsert \
   --collection ai_charlotte
 ```
 
+**Smart chunking features:**
+- ✅ **Semantic boundaries**: Respects job sections, headings, and logical breaks
+- ✅ **CV format detection**: Automatically detects and handles CV-specific formatting
+- ✅ **Optimal chunk sizes**: Target 200 words, max 350 words per chunk
+- ✅ **Multiple formats**: Supports both PDF and Markdown inputs
+
 **CLI Options:**
-- `--input`: Path to input PDF file
-- `--output`: Path to output JSONL file (default: `data/processed/cv_chunks.jsonl`)
-- `--max-chars`: Maximum characters per chunk (default: 1200)
-- `--overlap-chars`: Overlap between chunks (default: 200)
-- `--source-label`: Label to attach to chunks (default: "cv")
+- `--input`: Path to input document (PDF or Markdown)
+- `--output`: Path to output JSONL (auto-generated if not specified)
+- `--target-words`: Target words per chunk (default: 200)
+- `--max-words`: Maximum words per chunk (default: 350)
+- `--source-label`: Label to attach to chunks (auto-generated if not specified)
 
 **Output format:** Each line in the JSONL contains:
 ```json
 {
   "id": "cv-0",
   "chunk_index": 0,
-  "text": "...chunk content...",
+  "text": "...semantic chunk content...",
   "source": "cv",
+  "heading": "Professional Experience",
+  "chunk_type": "job",
+  "word_count": 185,
   "metadata": {
     "filename": "cv.pdf",
-    "path": "data/raw/cv.pdf"
+    "smart_chunking": true,
+    "source_format": "pdf"
   }
 }
 ```
