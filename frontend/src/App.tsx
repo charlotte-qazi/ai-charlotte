@@ -11,7 +11,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Box, Container, SpeedDial, SpeedDialAction } from "@mui/material"
 import { Menu as MenuIcon, Email as EmailIcon,
   LinkedIn as LinkedInIcon,
@@ -106,6 +106,41 @@ function App() {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sessionId, setSessionId] = useState<string | null>(null) // Used in future stages
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [userName, setUserName] = useState<string>("")
+
+  // Check for existing authentication on page load
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('user_id')
+    const storedUserName = localStorage.getItem('user_name')
+    
+    if (storedUserId && storedUserName) {
+      setSessionId(storedUserId)
+      setUserName(storedUserName)
+      setIsOnboardingComplete(true)
+      
+      // Set welcome message for returning user
+      const welcomeMessage = `Welcome back, ${storedUserName}! 🎉 I'm ready to help you learn more about Charlotte. What would you like to know?`
+      const welcomeMsg: ChatMessage = {
+        id: 1,
+        role: 'assistant',
+        content: welcomeMessage,
+        timestamp: new Date(),
+      }
+      setMessages([welcomeMsg])
+    }
+  }, [])
+
+  // Utility function to clear authentication data (for future logout functionality)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const clearAuthData = () => {
+    localStorage.removeItem('user_id')
+    localStorage.removeItem('user_name')
+    setSessionId(null)
+    setUserName("")
+    setIsOnboardingComplete(false)
+    setMessages([])
+  }
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
@@ -148,8 +183,9 @@ function App() {
     }
   }
 
-  const handleOnboardingComplete = (userId: string, welcomeMessage: string) => {
+  const handleOnboardingComplete = (userId: string, welcomeMessage: string, userName: string) => {
     setSessionId(userId) // Store user ID for future use
+    setUserName(userName) // Store user name
     setIsOnboardingComplete(true)
     
     // Add welcome message to chat
@@ -161,8 +197,9 @@ function App() {
     }
     setMessages([welcomeMsg])
     
-    // Set cookie for auth (simple approach)
-    document.cookie = `user_id=${userId}; path=/; max-age=${7 * 24 * 60 * 60}` // 7 days
+    // Save to localStorage (already done in OnboardingFlow, but ensuring consistency)
+    localStorage.setItem('user_id', userId)
+    localStorage.setItem('user_name', userName)
   }
 
   return (

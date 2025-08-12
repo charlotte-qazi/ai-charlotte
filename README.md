@@ -38,12 +38,19 @@ cp .env.example .env
 
 The app will run in demo mode without API keys, but for full functionality, add:
 ```bash
-# Optional: For full RAG functionality
+# Required: For full RAG functionality
 OPENAI_API_KEY=your-openai-key
 QDRANT_URL=your-qdrant-url
 QDRANT_API_KEY=your-qdrant-key
 QDRANT_COLLECTION=ai_charlotte
+
+# Required: For user onboarding and database storage
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_KEY=your_service_role_key_here
 ```
+
+> **For Supabase setup:** See the [Database Setup](#database-setup-supabase) section below.
 
 ### 3. Start the Application
 ```bash
@@ -80,7 +87,107 @@ Try asking Charlotte's chatbot:
 - "How did Charlotte transition into tech?"
 - "Has Charlotte given any presentations?"
 
+## Database Setup (Supabase)
+
+The onboarding system uses Supabase to store user data and manage sessions. Follow these steps to set up your database:
+
+### 1. Create Supabase Project
+
+1. Go to [supabase.com](https://supabase.com) and sign in/up
+2. Click "New Project"
+3. Choose your organization
+4. Fill in project details:
+   - **Name**: `ai-charlotte` (or your preferred name)
+   - **Database Password**: Generate a strong password and save it
+   - **Region**: Choose closest to your users
+5. Click "Create new project"
+
+### 2. Get Your Credentials
+
+Once your project is created:
+
+1. Go to **Settings** → **API**
+2. Copy these values:
+   - **Project URL** (e.g., `https://abcdefgh.supabase.co`)
+   - **Anon/Public Key** (starts with `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`)
+   - **Service Role Key** (starts with `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`) - **IMPORTANT**: This bypasses RLS
+
+### 3. Create the Users Table
+
+In your Supabase dashboard, go to **SQL Editor** and run:
+
+```sql
+-- Create users table for onboarding flow
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    interests TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    message_count INTEGER DEFAULT 0
+);
+
+-- Add RLS (Row Level Security) policies
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Allow anonymous inserts (for onboarding)
+CREATE POLICY "Allow anonymous user creation" ON users
+    FOR INSERT TO anon
+    WITH CHECK (true);
+
+-- Allow reading user data
+CREATE POLICY "Users can read own data" ON users
+    FOR SELECT TO anon
+    USING (true);
+
+-- Allow updating message count (for rate limiting)
+CREATE POLICY "Allow message count updates" ON users
+    FOR UPDATE TO anon
+    USING (true);
+```
+
+### 4. Test Database Connection
+
+```bash
+# Start backend server
+PYTHONPATH=/Users/your-username/path-to-project python -m uvicorn backend.main:app --reload --port 8000
+
+# Test user creation
+curl -X POST http://localhost:8000/api/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User", 
+    "interests": "Testing the onboarding flow"
+  }'
+```
+
+Expected response:
+```json
+{
+  "user_id": "1b8ea2e1-f0d0-4b25-9511-9c56778aeb7d"
+}
+```
+
+### 5. Verify in Supabase Dashboard
+
+1. Go to **Table Editor** → **users**
+2. You should see your test user in the table
+3. Check that all fields are populated correctly
+
 ## API Usage
+
+### User Creation Endpoint
+```bash
+curl -X POST "http://127.0.0.1:8000/api/users" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "John Doe", "interests": "I am a recruiter looking at Charlotte for a senior developer role"}'
+```
+
+Response:
+```json
+{
+  "user_id": "a6bc8110-e5f8-4ab1-b579-af45badb6b83"
+}
+```
 
 ### Chat Endpoint
 ```bash
@@ -221,6 +328,12 @@ lsof -i :5173 -t | xargs kill -9  # Frontend
 - Run test suite to identify specific issues
 - Review retrieved context quality
 
+**Supabase connection issues**
+- Ensure `SUPABASE_SERVICE_KEY` is set (not just `SUPABASE_ANON_KEY`)
+- Check that the `users` table exists in your Supabase project
+- Verify RLS policies allow the required operations
+- Look for initialization errors in server logs
+
 ### Getting Help
 1. Check terminal logs for error messages
 2. Run health check: `curl -s http://127.0.0.1:8000/health`
@@ -231,6 +344,7 @@ lsof -i :5173 -t | xargs kill -9  # Frontend
 
 - **Backend**: FastAPI, Python 3.9+, Pydantic
 - **Frontend**: React 18, TypeScript, Material-UI, Vite
+- **Database**: Supabase (PostgreSQL with real-time features)
 - **AI/ML**: OpenAI GPT-3.5-turbo, text-embedding-3-small
 - **Vector DB**: Qdrant Cloud
 - **Testing**: pytest, requests

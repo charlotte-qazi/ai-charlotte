@@ -13,7 +13,7 @@ import axios from 'axios'
 import ChatContainer, { type ChatMessage } from './ChatContainer'
 
 interface OnboardingFlowProps {
-  onComplete: (userId: string, welcomeMessage: string) => void
+  onComplete: (userId: string, welcomeMessage: string, userName: string) => void
 }
 
 const questions = [
@@ -98,6 +98,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         const response = await axios.post('/api/users', finalAnswers)
         const { user_id } = response.data
 
+        // Save user data to localStorage
+        localStorage.setItem('user_id', user_id)
+        localStorage.setItem('user_name', finalAnswers.name)
+
         // Generate welcome message
         const welcomeMessage = `Perfect! Thanks for sharing, ${finalAnswers.name}! 🎉 Now I'm all set to help you learn about Charlotte. You can ask me anything about her experience, projects, or interests. What would you like to know first?`
 
@@ -113,7 +117,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         
         // Complete onboarding after a delay
         setTimeout(() => {
-          onComplete(user_id, welcomeMessage)
+          onComplete(user_id, welcomeMessage, finalAnswers.name)
         }, 2000)
 
       } catch (error) {
