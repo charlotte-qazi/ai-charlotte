@@ -182,7 +182,8 @@ function App() {
             display: "flex", 
             flexDirection: "column",
             p: 2,
-            boxSizing: "border-box"
+            boxSizing: "border-box",
+            height: "100vh",
           }}
         >
           {!isOnboardingComplete ? (

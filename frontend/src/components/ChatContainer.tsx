@@ -110,7 +110,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       <Box
         ref={chatContainerRef}
         sx={{
-          height: "400px", // Fixed height for scrolling
+          flex: 1,
+          minHeight: 0,
           overflowY: "auto",
           overflowX: "hidden",
           p: 3,
@@ -256,6 +257,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
           p: 3,
           borderTop: "1px solid #e9ecef",
           background: "rgba(248, 249, 250, 0.5)",
+          minHeight: "100px", // Minimum height to ensure adequate space
         }}
       >
         <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
