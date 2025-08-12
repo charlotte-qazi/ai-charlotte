@@ -1,3 +1,13 @@
+"""
+AI Charlotte - Personal RAG Chatbot API Routes
+Copyright (c) 2025 Charlotte Qazi
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
+"""
+
 import logging
 from fastapi import APIRouter, HTTPException
 

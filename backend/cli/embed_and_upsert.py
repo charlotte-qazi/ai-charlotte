@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Embed JSONL chunks and upsert to Qdrant vector store.
+AI Charlotte - Embedding and Vector Database CLI
+Copyright (c) 2025 Charlotte Qazi
 
-Usage:
-python -m backend.cli.embed_and_upsert --input data/processed/cv_chunks.jsonl
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 """
 
 import argparse

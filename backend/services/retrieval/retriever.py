@@ -1,3 +1,13 @@
+"""
+AI Charlotte - Vector Retrieval Service
+Copyright (c) 2025 Charlotte Qazi
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
+"""
+
 from typing import List, Dict, Any
 import logging
 from openai import OpenAI

@@ -1,3 +1,13 @@
+/*
+ * AI Charlotte - React Frontend
+ * Copyright (c) 2025 Charlotte Qazi
+ * 
+ * This project is created and maintained by Charlotte Qazi.
+ * For more information, visit: https://github.com/charlotteqazi
+ * 
+ * Licensed under the MIT License.
+ */
+
 "use client"
 
 import type React from "react"
@@ -111,7 +121,8 @@ function App() {
       }
 
       setMessages((prev) => [...prev, assistantMessage])
-    } catch (e: any) {
+    } catch (error: unknown) {
+      console.error('Chat error:', error)
       const errorMessage: Message = {
         id: messages.length + 2,
         role: 'assistant',

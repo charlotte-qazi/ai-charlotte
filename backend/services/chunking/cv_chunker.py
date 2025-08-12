@@ -1,6 +1,14 @@
 """
+AI Charlotte - CV Chunking Service
+Copyright (c) 2025 Charlotte Qazi
+
 Simple, generic CV chunker that works with any CV format.
 Focuses on semantic sections and reasonable chunk sizes.
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 """
 
 import re

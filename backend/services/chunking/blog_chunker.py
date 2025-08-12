@@ -1,6 +1,13 @@
 """
-Blog Content Chunker
+AI Charlotte - Blog Content Chunker
+Copyright (c) 2025 Charlotte Qazi
+
 Specialized chunker for blog posts, optimized for Medium and other blog platforms.
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 """
 
 from typing import List, Dict, Any

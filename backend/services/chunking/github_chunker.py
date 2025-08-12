@@ -1,6 +1,14 @@
 """
+AI Charlotte - GitHub Repository Chunker
+Copyright (c) 2025 Charlotte Qazi
+
 GitHub repository chunker for processing repository data and README files.
 Handles both structured repository metadata and README content.
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 """
 
 import re

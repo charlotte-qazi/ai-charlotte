@@ -1,3 +1,13 @@
+/*
+ * AI Charlotte - ESLint Configuration
+ * Copyright (c) 2025 Charlotte Qazi
+ * 
+ * This project is created and maintained by Charlotte Qazi.
+ * For more information, visit: https://github.com/charlotteqazi
+ * 
+ * Licensed under the MIT License.
+ */
+
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
