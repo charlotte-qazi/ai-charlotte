@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """
+AI Charlotte - GitHub Repository Processing CLI
+Copyright (c) 2025 Charlotte Qazi
+
 Process GitHub repositories: ingest, chunk, and save to JSONL.
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 
 Usage:
 python -m backend.cli.process_github --output data/processed/github_chunks.jsonl

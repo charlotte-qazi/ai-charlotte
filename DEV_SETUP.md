@@ -1,5 +1,7 @@
 # Development Setup Guide
 
+**Copyright (c) 2025 Charlotte Qazi | Created and maintained by Charlotte Qazi | Licensed under the MIT License**
+
 This guide walks you through setting up the AI Charlotte RAG chatbot from scratch with your own CV and environment configuration.
 
 ## Prerequisites

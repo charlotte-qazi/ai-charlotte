@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-Simple CLI tool to process any CV (PDF or Markdown) into chunks.
-Works with any CV format - not specific to Charlotte's CV.
+AI Charlotte - CV Processing CLI
+Copyright (c) 2025 Charlotte Qazi
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 """
 
 import json

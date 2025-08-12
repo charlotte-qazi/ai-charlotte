@@ -1,5 +1,7 @@
 # AI Charlotte - Personal RAG Chatbot
 
+**Copyright (c) 2025 Charlotte Qazi | Created and maintained by Charlotte Qazi | Licensed under the MIT License**
+
 A production-ready chatbot that answers questions about Charlotte Qazi's professional background, experience, and skills using Retrieval-Augmented Generation (RAG).
 
 **🚀 Ready to run with Charlotte's CV already processed and indexed.**

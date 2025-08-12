@@ -1,3 +1,13 @@
+"""
+AI Charlotte - Text Embedding Service
+Copyright (c) 2025 Charlotte Qazi
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
+"""
+
 from typing import List, Optional
 import openai
 from openai import OpenAI

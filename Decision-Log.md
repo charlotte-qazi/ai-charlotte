@@ -1,5 +1,7 @@
 # How I built AI-Charlotte
 
+**Copyright (c) 2025 Charlotte Qazi | Created and maintained by Charlotte Qazi | Licensed under the MIT License**
+
 ## Goal:
 
 Build a personal chatbot using Retrieval-Augmented Generation (RAG) to answer questions with context from my CV, blog posts, GitHub, YouTube, and other personal content.

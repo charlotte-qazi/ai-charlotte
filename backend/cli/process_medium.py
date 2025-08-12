@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
-Medium Blog Processing CLI
+AI Charlotte - Medium Blog Processing CLI
+Copyright (c) 2025 Charlotte Qazi
+
 Fetches Medium blog posts from RSS and processes them into chunks for RAG indexing.
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 """
 
 import argparse

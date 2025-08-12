@@ -1,6 +1,13 @@
 """
-Medium Blog Ingester
+AI Charlotte - Medium Blog Ingester
+Copyright (c) 2025 Charlotte Qazi
+
 Fetches and processes Medium blog posts from RSS feeds for RAG indexing.
+
+This project is created and maintained by Charlotte Qazi.
+For more information, visit: https://github.com/charlotteqazi
+
+Licensed under the MIT License.
 """
 
 import feedparser

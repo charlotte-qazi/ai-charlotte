@@ -1,3 +1,13 @@
+/*
+ * AI Charlotte - React Frontend
+ * Copyright (c) 2025 Charlotte Qazi
+ * 
+ * This project is created and maintained by Charlotte Qazi.
+ * For more information, visit: https://github.com/charlotteqazi
+ * 
+ * Licensed under the MIT License.
+ */
+
 import { useState } from 'react'
 import {
   Box,
@@ -36,7 +46,8 @@ export default function App() {
       const resp = await axios.post('/api/chat', { message: trimmed })
       const answer: string = resp.data.answer
       setMessages((prev) => [...prev, { role: 'assistant', content: answer }])
-    } catch (e: any) {
+    } catch (error: unknown) {
+      console.error('Chat error:', error)
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: 'Sorry, something went wrong.' },
