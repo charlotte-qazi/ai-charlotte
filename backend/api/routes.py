@@ -13,8 +13,9 @@ from fastapi import APIRouter, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from backend.schemas.chat import ChatRequest, ChatResponse
+from backend.schemas.chat import ChatRequest, ChatResponse, CreateUserRequest, CreateUserResponse
 from backend.services.rag_service import RAGService
+from backend.services.supabase_client import SupabaseClient
 from backend.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -23,8 +24,9 @@ router = APIRouter()
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
-# Initialize RAG service
+# Initialize services
 rag_service = RAGService(collection_name="ai_charlotte")
+supabase_client = SupabaseClient()
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -51,6 +53,32 @@ async def chat(request: Request, chat_request: ChatRequest) -> ChatResponse:
         raise HTTPException(
             status_code=500,
             detail="I'm experiencing technical difficulties. Please try again."
+        )
+
+
+@router.post("/users", response_model=CreateUserResponse)
+@limiter.limit(f"{settings.rate_limit_requests}/minute")
+async def create_user(request: Request, user_request: CreateUserRequest) -> CreateUserResponse:
+    """
+    Create a new user after onboarding.
+    Saves name, role, and interests in one API call.
+    """
+    try:
+        logger.info(f"👤 Creating user: {user_request.name}")
+        
+        # Save user to database
+        user_id = await supabase_client.create_user(
+            name=user_request.name,
+            interests=user_request.interests
+        )
+        
+        return CreateUserResponse(user_id=user_id)
+        
+    except Exception as e:
+        logger.error(f"❌ Error creating user: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to create user. Please try again."
         )
 
 

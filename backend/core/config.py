@@ -28,6 +28,10 @@ class Settings:
     github_username: Optional[str] = os.getenv("GITHUB_USERNAME")
     github_api_token: Optional[str] = os.getenv("GITHUB_API_TOKEN")
     
+    # Supabase Configuration
+    supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
+    supabase_key: Optional[str] = os.getenv("SUPABASE_ANON_KEY")
+    
     # Server Configuration
     host: str = os.getenv("HOST", "0.0.0.0")
     port: int = int(os.getenv("PORT", "8000"))

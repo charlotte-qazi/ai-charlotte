@@ -20,6 +20,7 @@ import { Face3, Send as SendIcon, SupportAgent, Menu as MenuIcon,   Email as Ema
   Person as PortfolioIcon } from "@mui/icons-material"
 import { createTheme, ThemeProvider } from "@mui/material/styles"
 import axios from 'axios'
+import OnboardingFlow from './components/OnboardingFlow'
 
 // Custom theme with Charlotte's brand colors
 const theme = createTheme({
@@ -105,16 +106,12 @@ const speedDialActions = [
 ]
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      role: 'assistant',
-      content: "Hi there! ✨ I'm Charlotte's AI assistant, here to help you learn more about her experience, projects, and personality. What would you like to know?",
-      timestamp: new Date(),
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [sessionId, setSessionId] = useState<string | null>(null) // Used in future stages
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -174,6 +171,23 @@ function App() {
     }
   }
 
+  const handleOnboardingComplete = (userId: string, welcomeMessage: string) => {
+    setSessionId(userId) // Store user ID for future use
+    setIsOnboardingComplete(true)
+    
+    // Add welcome message to chat
+    const welcomeMsg: Message = {
+      id: 1,
+      role: 'assistant',
+      content: welcomeMessage,
+      timestamp: new Date(),
+    }
+    setMessages([welcomeMsg])
+    
+    // Set cookie for auth (simple approach)
+    document.cookie = `user_id=${userId}; path=/; max-age=${7 * 24 * 60 * 60}` // 7 days
+  }
+
   return (
     <ThemeProvider theme={theme}>
       <Box
@@ -212,19 +226,23 @@ function App() {
                 </Typography>
               </Box>
 
-              {/* Chat Messages */}
-              <Box
-                ref={chatContainerRef}
-                sx={{
-                  height: 400,
-                  overflowY: "auto",
-                  p: 3,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                }}
-              >
-                {messages.map((message, index) => (
+              {/* Chat Content */}
+              <Box sx={{ height: 400 }}>
+                {!isOnboardingComplete ? (
+                  <OnboardingFlow onComplete={handleOnboardingComplete} />
+                ) : (
+                  <Box
+                    ref={chatContainerRef}
+                    sx={{
+                      height: "100%",
+                      overflowY: "auto",
+                      p: 3,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    {messages.map((message, index) => (
                   <Box
                     key={message.id}
                     sx={{
@@ -351,77 +369,81 @@ function App() {
                       </Typography>
                     </Paper>
                   </Box>
+                    )}
+                  </Box>
                 )}
               </Box>
 
-              {/* Input Area */}
-              <Box
-                sx={{
-                  p: 3,
-                  borderTop: "1px solid #e9ecef",
-                  background: "rgba(248, 249, 250, 0.5)",
-                }}
-              >
-                <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    maxRows={3}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask me anything about Charlotte's experience, projects, or interests... ✨"
-                    variant="outlined"
-                    disabled={loading}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: 3,
-                        bgcolor: "white",
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          borderColor: "primary.main",
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          borderColor: "primary.main",
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
-                  <IconButton
-                    onClick={handleSendMessage}
-                    aria-label="Send message"
-                    disabled={!inputValue.trim() || loading}
-                    sx={{
-                      bgcolor: "primary.main",
-                      color: "white",
-                      width: 48,
-                      height: 48,
-                      "&:hover": {
-                        bgcolor: "primary.dark",
-                      },
-                      "&.Mui-disabled": {
-                        bgcolor: "#e9ecef",
-                        color: "#6c757d",
-                      },
-                    }}
-                  >
-                    <SendIcon />
-                  </IconButton>
-                </Box>
-
-                <Typography
-                  variant="caption"
+              {/* Input Area - Only show when onboarding is complete */}
+              {isOnboardingComplete && (
+                <Box
                   sx={{
-                    display: "block",
-                    mt: 2,
-                    textAlign: "center",
-                    color: "text.secondary",
-                    fontStyle: "italic",
+                    p: 3,
+                    borderTop: "1px solid #e9ecef",
+                    background: "rgba(248, 249, 250, 0.5)",
                   }}
                 >
-                  Powered by Charlotte's passion for creating delightful user experiences 💕
-                </Typography>
-              </Box>
+                  <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      maxRows={3}
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Ask me anything about Charlotte's experience, projects, or interests... ✨"
+                      variant="outlined"
+                      disabled={loading}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 3,
+                          bgcolor: "white",
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "primary.main",
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "primary.main",
+                            borderWidth: 2,
+                          },
+                        },
+                      }}
+                    />
+                    <IconButton
+                      onClick={handleSendMessage}
+                      aria-label="Send message"
+                      disabled={!inputValue.trim() || loading}
+                      sx={{
+                        bgcolor: "primary.main",
+                        color: "white",
+                        width: 48,
+                        height: 48,
+                        "&:hover": {
+                          bgcolor: "primary.dark",
+                        },
+                        "&.Mui-disabled": {
+                          bgcolor: "#e9ecef",
+                          color: "#6c757d",
+                        },
+                      }}
+                    >
+                      <SendIcon />
+                    </IconButton>
+                  </Box>
+
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: "block",
+                      mt: 2,
+                      textAlign: "center",
+                      color: "text.secondary",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    Powered by Charlotte's passion for creating delightful user experiences 💕
+                  </Typography>
+                </Box>
+              )}
             </Paper>
           </Fade>
         </Container>
