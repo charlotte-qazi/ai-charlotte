@@ -150,4 +150,76 @@ class SupabaseClient:
                 
         except Exception as e:
             logger.error(f"❌ Error updating message count: {e}")
-            return 1 
+            return 1
+    
+    async def save_message(self, user_id: str, message: str, sender: str) -> bool:
+        """
+        Save a message to the messages table.
+        
+        Args:
+            user_id: The user ID who sent or received the message
+            message: The message content
+            sender: Either 'user' or 'agent'
+            
+        Returns:
+            True if message was saved successfully, False otherwise
+        """
+        if sender not in ['user', 'agent']:
+            logger.error(f"❌ Invalid sender type: {sender}. Must be 'user' or 'agent'")
+            return False
+            
+        message_data = {
+            "user_id": user_id,
+            "message": message,
+            "sender": sender,
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        if self.client is None:
+            # Fallback to stub implementation if no client
+            logger.info(f"💬 [STUB] Saving {sender} message for user {user_id}: {message[:50]}...")
+            return True
+        
+        try:
+            # Insert message data into Supabase
+            result = self.client.table("messages").insert(message_data).execute()
+            
+            if result.data:
+                logger.debug(f"✅ {sender.title()} message saved for user {user_id}")
+                return True
+            else:
+                logger.error(f"❌ Failed to save {sender} message: No data returned")
+                return False
+                
+        except Exception as e:
+            logger.error(f"❌ Error saving {sender} message: {e}")
+            # In production, you might want to raise the exception
+            # For now, we'll fall back to stub behavior
+            logger.info(f"💬 [FALLBACK] Saving {sender} message for user {user_id}: {message[:50]}...")
+            return False
+    
+    async def save_user_message(self, user_id: str, message: str) -> bool:
+        """
+        Save a user message.
+        
+        Args:
+            user_id: The user ID who sent the message
+            message: The message content
+            
+        Returns:
+            True if message was saved successfully, False otherwise
+        """
+        return await self.save_message(user_id, message, "user")
+    
+    async def save_agent_message(self, user_id: str, message: str) -> bool:
+        """
+        Save an agent response message.
+        
+        Args:
+            user_id: The user ID who received the message
+            message: The agent response content
+            
+        Returns:
+            True if message was saved successfully, False otherwise
+        """
+        return await self.save_message(user_id, message, "agent") 

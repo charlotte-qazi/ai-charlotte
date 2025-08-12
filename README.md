@@ -143,6 +143,28 @@ CREATE POLICY "Users can read own data" ON users
 CREATE POLICY "Allow message count updates" ON users
     FOR UPDATE TO anon
     USING (true);
+
+-- Create messages table for chat history
+CREATE TABLE messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    sender TEXT NOT NULL CHECK (sender IN ('user', 'agent')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add RLS policies for messages
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+-- Allow inserting messages
+CREATE POLICY "Allow message creation" ON messages
+    FOR INSERT TO anon
+    WITH CHECK (true);
+
+-- Allow reading messages
+CREATE POLICY "Allow reading messages" ON messages
+    FOR SELECT TO anon
+    USING (true);
 ```
 
 ### 4. Test Database Connection

@@ -54,10 +54,19 @@ async def chat(request: Request, chat_request: ChatRequest) -> ChatResponse:
         # Check if user has reached the 10-message limit
         if current_message_count >= 10:
             logger.info(f"🚫 User {chat_request.user_id} has reached message limit ({current_message_count} messages)")
+            limit_message = "💡 We've been talking for a while. Human Charlotte would love to continue the conversation. You can reach her at charlotte.qazi@gmail.com 💌"
+            
+            # Save the user message and limit response
+            await supabase_client.save_user_message(chat_request.user_id, chat_request.message)
+            await supabase_client.save_agent_message(chat_request.user_id, limit_message)
+            
             return ChatResponse(
-                answer="💡 We've been talking for a while. Human Charlotte would love to continue the conversation. You can reach her at charlotte.qazi@gmail.com",
+                answer=limit_message,
                 sources=[]
             )
+        
+        # Save the user message first
+        await supabase_client.save_user_message(chat_request.user_id, chat_request.message)
         
         # Increment message count before processing
         new_count = await supabase_client.increment_message_count(chat_request.user_id)
@@ -69,6 +78,9 @@ async def chat(request: Request, chat_request: ChatRequest) -> ChatResponse:
             top_k=3,  # Retrieve top 3 most relevant chunks
             min_score=0.3  # Minimum similarity score (lowered further for better recall)
         )
+        
+        # Save the agent response
+        await supabase_client.save_agent_message(chat_request.user_id, response.answer)
         
         return response
         
