@@ -10,6 +10,7 @@
 
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
+import config from '../config'
 import ChatContainer, { type ChatMessage } from './ChatContainer'
 
 interface OnboardingFlowProps {
@@ -95,7 +96,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           interests: currentStep === 1 ? answer : answers.interests
         }
 
-        const response = await axios.post('/api/users', finalAnswers)
+        const response = await axios.post(`${config.apiBaseUrl}/api/users`, finalAnswers)
         const { user_id } = response.data
 
         // Save user data to localStorage

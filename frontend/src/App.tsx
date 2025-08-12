@@ -21,6 +21,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles"
 import axios from 'axios'
 import OnboardingFlow from './components/OnboardingFlow'
 import ChatContainer, { type ChatMessage } from './components/ChatContainer'
+import config from './config'
 
 // Custom theme with Charlotte's brand colors
 const theme = createTheme({
@@ -145,7 +146,7 @@ function App() {
     setLoading(true)
 
     try {
-      const resp = await axios.post('/api/chat', { 
+      const resp = await axios.post(`${config.apiBaseUrl}/api/chat`, { 
         message: messageContent,
         user_id: sessionId 
       })
