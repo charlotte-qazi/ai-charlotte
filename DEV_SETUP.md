@@ -125,6 +125,21 @@ QDRANT_COLLECTION=ai_charlotte
 # Alternative: Local Qdrant (uncomment if using local instance)
 # QDRANT_URL=http://localhost:6333
 # QDRANT_API_KEY=
+
+# Server Configuration (Optional - defaults shown)
+HOST=0.0.0.0                    # Server host
+PORT=8000                       # Server port
+
+# Environment Configuration (Optional)
+ENVIRONMENT=development         # Environment: development or production
+DEBUG=true                      # Debug mode (false for production)
+
+# CORS Configuration (Optional)
+CORS_ORIGINS=http://localhost:3000,http://localhost:5173    # Comma-separated allowed origins
+
+# Rate Limiting Configuration (Optional)
+RATE_LIMIT_REQUESTS=100         # Requests per minute
+RATE_LIMIT_WINDOW=60            # Rate limit window in seconds
 ```
 
 ## 2. Prepare Your CV
@@ -230,8 +245,25 @@ curl -H "api-key: $QDRANT_API_KEY" \
 ### Start Backend Server
 ```bash
 # In terminal 1 - Backend
+# IMPORTANT: Always activate your virtual environment first
 source .venv/bin/activate
+
+# Option 1: Using uvicorn directly (simple)
 uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+
+# Option 2: Using environment-based configuration (recommended)
+# This uses HOST, PORT, ENVIRONMENT, and DEBUG from your .env file
+python -c "
+import uvicorn
+from backend.core.config import settings
+uvicorn.run(
+    'backend.main:app',
+    host=settings.host,
+    port=settings.port,
+    reload=not settings.is_production,
+    log_level='info' if settings.is_production else 'debug'
+)
+"
 ```
 
 ### Start Frontend Server
@@ -452,22 +484,68 @@ lsof -i :8000 -t | xargs kill -9  # Backend
 lsof -i :5173 -t | xargs kill -9  # Frontend
 ```
 
-## 11. Production Considerations
+## 11. Production Deployment
 
-### Environment Security
+### Production Environment Setup
+For production deployment, update your `.env` file:
+```bash
+# Production Configuration
+ENVIRONMENT=production
+DEBUG=false
+HOST=0.0.0.0
+PORT=8000
+
+# Update CORS for your domain
+CORS_ORIGINS=https://yourdomain.com
+
+# Adjust rate limiting as needed
+RATE_LIMIT_REQUESTS=50          # More restrictive for production
+RATE_LIMIT_WINDOW=60
+```
+
+### Start Production Server
+```bash
+# Production server with environment-based configuration
+source .venv/bin/activate
+python -c "
+import uvicorn
+from backend.core.config import settings
+uvicorn.run(
+    'backend.main:app',
+    host=settings.host,
+    port=settings.port,
+    reload=not settings.is_production,
+    log_level='info' if settings.is_production else 'debug'
+)
+"
+
+# Or use gunicorn for production (install with: pip install gunicorn)
+gunicorn backend.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+### Security Considerations
+
+#### Environment Security
 - Never commit `.env` files to version control
 - Use environment-specific configurations
 - Rotate API keys regularly
 
-### Performance Optimization
+#### Performance Optimization
 - Monitor OpenAI API usage and costs
 - Consider caching frequently asked questions
-- Implement rate limiting for production use
+- Rate limiting is automatically configured
 
-### Monitoring
+#### Monitoring
 - Set up logging for API requests
 - Monitor Qdrant collection health
 - Track RAG system performance metrics
+
+#### Built-in Security Features
+✅ **Security headers** automatically applied (CSP, HSTS, X-Frame-Options, etc.)
+✅ **Rate limiting** prevents abuse (configurable per environment)
+✅ **CORS protection** restricts cross-origin requests
+✅ **Input validation** prevents malicious input
+✅ **Environment-based config** separates dev/prod settings
 
 ## 12. Next Steps
 

@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=1000, description="Chat message from user")
 
 
 class Source(BaseModel):
