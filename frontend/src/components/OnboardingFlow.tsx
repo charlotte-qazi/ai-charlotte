@@ -96,7 +96,11 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           interests: currentStep === 1 ? answer : answers.interests
         }
 
+        console.log('🔗 Making API call to:', `${config.apiBaseUrl}/api/users`)
+        console.log('📤 Sending data:', finalAnswers)
+        
         const response = await axios.post(`${config.apiBaseUrl}/api/users`, finalAnswers)
+        console.log('📥 Response:', response.data)
         const { user_id } = response.data
 
         // Save user data to localStorage
@@ -122,7 +126,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         }, 2000)
 
       } catch (error) {
-        console.error('Error creating user:', error)
+        console.error('❌ Error creating user:', error)
+        if (axios.isAxiosError(error)) {
+          console.error('📊 Status:', error.response?.status)
+          console.error('📄 Response:', error.response?.data)
+          console.error('🔗 URL:', error.config?.url)
+        }
         const errorMessage: ChatMessage = {
           id: messages.length + 2,
           role: 'assistant',

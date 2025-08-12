@@ -130,4 +130,20 @@ async def health_check(request: Request):
         return health_status
     except Exception as e:
         logger.error(f"❌ Health check failed: {e}")
-        return {"status": "unhealthy", "error": str(e)} 
+        return {"status": "unhealthy", "error": str(e)}
+
+
+@router.get("/debug/config")
+@limiter.limit(f"{settings.rate_limit_requests}/minute")
+async def debug_config(request: Request):
+    """Debug endpoint to check configuration (remove in production)."""
+    return {
+        "environment": settings.environment,
+        "debug": settings.debug,
+        "qdrant_url_set": bool(settings.qdrant_url),
+        "qdrant_api_key_set": bool(settings.qdrant_api_key),
+        "qdrant_collection": settings.qdrant_collection,
+        "openai_api_key_set": bool(settings.openai_api_key),
+        "supabase_url_set": bool(settings.supabase_url),
+        "supabase_key_set": bool(settings.supabase_key),
+    } 
