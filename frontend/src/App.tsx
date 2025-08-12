@@ -10,7 +10,6 @@
 
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
 import { Box, Container, SpeedDial, SpeedDialAction } from "@mui/material"
 import { Menu as MenuIcon, Email as EmailIcon,
@@ -106,8 +105,7 @@ function App() {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sessionId, setSessionId] = useState<string | null>(null) // Used in future stages
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [userName, setUserName] = useState<string>("")
+  const [, setUserName] = useState<string>("")
 
   // Check for existing authentication on page load
   useEffect(() => {
@@ -130,17 +128,6 @@ function App() {
       setMessages([welcomeMsg])
     }
   }, [])
-
-  // Utility function to clear authentication data (for future logout functionality)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const clearAuthData = () => {
-    localStorage.removeItem('user_id')
-    localStorage.removeItem('user_name')
-    setSessionId(null)
-    setUserName("")
-    setIsOnboardingComplete(false)
-    setMessages([])
-  }
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return
