@@ -30,7 +30,8 @@ class Settings:
     
     # Supabase Configuration
     supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
-    supabase_key: Optional[str] = os.getenv("SUPABASE_ANON_KEY")
+    supabase_key: Optional[str] = os.getenv("SUPABASE_SERVICE_KEY")  # Use service role key for server-side operations
+    supabase_anon_key: Optional[str] = os.getenv("SUPABASE_ANON_KEY")  # Keep anon key for reference
     
     # Server Configuration
     host: str = os.getenv("HOST", "0.0.0.0")

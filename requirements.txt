@@ -15,4 +15,5 @@ feedparser>=6.0.11
 certifi>=2023.7.22
 pytest>=8.0.0
 slowapi>=0.1.9
-secure>=0.3.0 
+secure>=0.3.0
+supabase>=2.8.1 
