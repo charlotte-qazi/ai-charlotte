@@ -12,8 +12,12 @@
 
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
-import { Box, Paper, Typography, TextField, IconButton, Avatar, Container, Fade, CircularProgress } from "@mui/material"
-import { Face3, Send as SendIcon, SupportAgent } from "@mui/icons-material"
+import { Box, Paper, Typography, TextField, IconButton, Avatar, Container, Fade, CircularProgress, SpeedDial, SpeedDialAction } from "@mui/material"
+import { Face3, Send as SendIcon, SupportAgent, Menu as MenuIcon,   Email as EmailIcon,
+  LinkedIn as LinkedInIcon,
+  GitHub as GitHubIcon,
+  Article as MediumIcon,
+  Person as PortfolioIcon } from "@mui/icons-material"
 import { createTheme, ThemeProvider } from "@mui/material/styles"
 import axios from 'axios'
 
@@ -71,6 +75,34 @@ interface Message {
   content: string
   timestamp: Date
 }
+
+const speedDialActions = [
+  {
+    icon: <EmailIcon />,
+    name: "Email",
+    action: () => window.open("mailto:charlotte.qazi@gmail.com", "_blank"),
+  },
+  {
+    icon: <LinkedInIcon />,
+    name: "LinkedIn",
+    action: () => window.open("https://linkedin.com/in/charlotteqazi", "_blank"),
+  },
+  {
+    icon: <GitHubIcon />,
+    name: "GitHub",
+    action: () => window.open("https://github.com/charlotte-qazi", "_blank"),
+  },
+  {
+    icon: <MediumIcon />,
+    name: "Medium",
+    action: () => window.open("https://medium.com/@charlotteqazi", "_blank"),
+  },
+  {
+    icon: <PortfolioIcon />,
+    name: "Portfolio",
+    action: () => window.open("https://charlottemdavies.co.uk", "_blank"),
+  },
+]
 
 function App() {
   const [messages, setMessages] = useState<Message[]>([
@@ -393,6 +425,45 @@ function App() {
             </Paper>
           </Fade>
         </Container>
+
+        <SpeedDial
+          ariaLabel="Social Links"
+          sx={{
+            position: "fixed",
+            bottom: 24,
+            right: 24,
+            "& .MuiSpeedDial-fab": {
+              bgcolor: "primary.main",
+              color: "white",
+              "&:hover": {
+                bgcolor: "primary.dark",
+              },
+            },
+          }}
+          icon={<MenuIcon />}
+        >
+          {speedDialActions.map((action) => (
+            <SpeedDialAction
+              key={action.name}
+              icon={action.icon}
+              tooltipTitle={action.name}
+              onClick={action.action}
+              sx={{
+                "& .MuiSpeedDialAction-fab": {
+                  bgcolor: "background.paper",
+                  color: "primary.main",
+                  border: "2px solid",
+                  borderColor: "primary.main",
+                  "&:hover": {
+                    bgcolor: "primary.main",
+                    color: "white",
+                  },
+                },
+              }}
+            />
+          ))}
+        </SpeedDial>
+
       </Box>
     </ThemeProvider>
   )
