@@ -14,6 +14,8 @@ class Settings:
     qdrant_url: Optional[str] = os.getenv("QDRANT_URL")
     qdrant_api_key: Optional[str] = os.getenv("QDRANT_API_KEY")
     qdrant_collection: str = os.getenv("QDRANT_COLLECTION", "personal_docs")
+    github_username: Optional[str] = os.getenv("GITHUB_USERNAME")
+    github_api_token: Optional[str] = os.getenv("GITHUB_API_TOKEN")
 
 
 settings = Settings() 

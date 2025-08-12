@@ -58,9 +58,17 @@ class RAGService:
             # Step 3: Format sources for response
             sources = []
             for source_info in result["sources"]:
+                # Extract URL from metadata if available
+                url = None
+                metadata = source_info.get("metadata", {})
+                if "repo_url" in metadata:
+                    url = metadata["repo_url"]
+                elif "url" in metadata:
+                    url = metadata["url"]
+                
                 source = Source(
                     title=source_info["title"],
-                    url=None,  # Could add URL if documents have them
+                    url=url,
                     score=source_info["score"]
                 )
                 sources.append(source)

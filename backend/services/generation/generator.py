@@ -70,7 +70,7 @@ Remember: You’re representing Charlotte Qazi. Be accurate and grounded, while 
                 top_p=0.9
             )
             
-            answer = response.choices[0].message.content.strip()
+            answer = (response.choices[0].message.content or "").strip()
             
             logger.info(f"✅ Generated answer ({len(answer)} chars)")
             return answer
@@ -87,11 +87,26 @@ Remember: You’re representing Charlotte Qazi. Be accurate and grounded, while 
             # Format sources from contexts
             sources = []
             for chunk in contexts:
+                # Generate appropriate title based on source type
+                title = chunk.get('heading', 'Unknown Section')
+                metadata = chunk.get('metadata', {})
+                
+                if chunk.get('source') == 'github':
+                    repo_name = metadata.get('repo_name', 'Unknown Repo')
+                    chunk_type = metadata.get('type', 'content')
+                    if chunk_type == 'repository_summary':
+                        title = f"Repository: {repo_name}"
+                    elif chunk_type == 'readme_section':
+                        title = f"README: {repo_name}"
+                    else:
+                        title = f"GitHub: {repo_name}"
+                
                 source_info = {
-                    "title": chunk.get('heading', 'Unknown Section'),
+                    "title": title,
                     "score": chunk.get('score', 0),
                     "source": chunk.get('source', ''),
-                    "chunk_type": chunk.get('chunk_type', 'content')
+                    "chunk_type": chunk.get('chunk_type', 'content'),
+                    "metadata": metadata
                 }
                 sources.append(source_info)
             

@@ -28,6 +28,9 @@ pip install -r requirements.txt
 cd frontend
 npm install
 cd ..
+
+# Starter code is on branch: starter-code
+git checkout starter-code
 ```
 
 ### Get Required Credentials
@@ -248,7 +251,43 @@ curl -s -X POST http://127.0.0.1:8000/api/chat \
   -d '{"message": "What is my professional experience?"}' | jq .
 ```
 
-## 6. Add Your Medium Blog (Optional)
+## 6. Add Your GitHub Repositories (Optional)
+
+If you want to include your GitHub repositories in the RAG system:
+
+### Setup GitHub Integration
+```bash
+# Add to your .env file:
+GITHUB_USERNAME=your-github-username
+GITHUB_API_TOKEN=your-github-personal-access-token
+```
+
+**Get GitHub Token:**
+1. Go to GitHub Settings → Developer settings → Personal access tokens
+2. Generate a new token with `public_repo` scope (or `repo` for private repos)
+3. Add the token to your `.env` file
+
+### Process GitHub Repositories
+```bash
+# Ingest and chunk all your GitHub repositories
+python -m backend.cli.process_github --output data/processed/github_chunks.jsonl
+
+# Add to vector database
+python -m backend.cli.embed_and_upsert --input data/processed/github_chunks.jsonl
+```
+
+**What gets indexed:**
+- Repository metadata (languages, topics, stars, forks)
+- README content from each repository
+- Programming language statistics
+- Project descriptions and URLs
+
+**Example queries after setup:**
+- "What programming languages does [NAME] use?"
+- "Tell me about [NAME]'s React projects"
+- "What are [NAME]'s most popular repositories?"
+
+## 7. Add Your Medium Blog (Optional)
 
 If you have a Medium blog, you can add your articles to the RAG system:
 
@@ -300,7 +339,7 @@ unset VERIFY_SSL  # or export VERIFY_SSL=true
 - **Development**: Can be disabled via `VERIFY_SSL=false` environment variable
 - **Security**: Never disable SSL verification in production environments
 
-## 7. Test Your RAG System
+## 8. Test Your RAG System
 
 ### Run Comprehensive Tests
 ```bash
@@ -355,7 +394,7 @@ Edit `tests/test_rag_evaluation.py` to include questions specific to your CV:
 }
 ```
 
-## 7. Customization Options
+## 9. Customization Options
 
 ### Adjust Chunking Parameters
 If you need different chunk sizes, modify `backend/services/chunking/cv_chunker.py`:
@@ -382,7 +421,7 @@ If you want a different collection name:
 2. Update the collection name in test files
 3. Re-run the embedding process
 
-## 8. Troubleshooting Common Issues
+## 10. Troubleshooting Common Issues
 
 ### "No relevant contexts found" Error
 This means the retrieval system isn't finding matching content:
@@ -411,7 +450,7 @@ lsof -i :8000 -t | xargs kill -9  # Backend
 lsof -i :5173 -t | xargs kill -9  # Frontend
 ```
 
-## 9. Production Considerations
+## 11. Production Considerations
 
 ### Environment Security
 - Never commit `.env` files to version control
@@ -428,7 +467,7 @@ lsof -i :5173 -t | xargs kill -9  # Frontend
 - Monitor Qdrant collection health
 - Track RAG system performance metrics
 
-## 10. Next Steps
+## 12. Next Steps
 
 Once your basic setup is working:
 1. **Add more content**: Process additional documents (blog posts, projects)
