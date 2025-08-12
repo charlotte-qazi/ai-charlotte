@@ -158,7 +158,10 @@ function App() {
     setLoading(true)
 
     try {
-      const resp = await axios.post('/api/chat', { message: messageContent })
+      const resp = await axios.post('/api/chat', { 
+        message: messageContent,
+        user_id: sessionId 
+      })
       const answer: string = resp.data.answer
       
       const assistantMessage: ChatMessage = {

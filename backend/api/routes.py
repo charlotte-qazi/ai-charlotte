@@ -35,9 +35,33 @@ async def chat(request: Request, chat_request: ChatRequest) -> ChatResponse:
     """
     Chat endpoint powered by RAG (Retrieval-Augmented Generation).
     Answers questions about Charlotte Qazi using her CV and documents.
+    Enforces a 10-message limit per user.
     """
     try:
-        logger.info(f"💬 Chat request: '{chat_request.message[:100]}...'")
+        logger.info(f"💬 Chat request from user {chat_request.user_id}: '{chat_request.message[:100]}...'")
+        
+        # Get user data to check message count
+        user_data = await supabase_client.get_user(chat_request.user_id)
+        if not user_data:
+            logger.error(f"❌ User not found: {chat_request.user_id}")
+            raise HTTPException(
+                status_code=404,
+                detail="User session not found. Please refresh and try again."
+            )
+        
+        current_message_count = user_data.get("message_count", 0)
+        
+        # Check if user has reached the 10-message limit
+        if current_message_count >= 10:
+            logger.info(f"🚫 User {chat_request.user_id} has reached message limit ({current_message_count} messages)")
+            return ChatResponse(
+                answer="💡 We've been talking for a while. Human Charlotte would love to continue the conversation. You can reach her at charlotte.qazi@gmail.com",
+                sources=[]
+            )
+        
+        # Increment message count before processing
+        new_count = await supabase_client.increment_message_count(chat_request.user_id)
+        logger.info(f"📊 Message count for user {chat_request.user_id}: {new_count}/10")
         
         # Use RAG service to answer the question
         response = await rag_service.answer_question(
@@ -48,6 +72,9 @@ async def chat(request: Request, chat_request: ChatRequest) -> ChatResponse:
         
         return response
         
+    except HTTPException:
+        # Re-raise HTTP exceptions (like message limit)
+        raise
     except Exception as e:
         logger.error(f"❌ Chat endpoint error: {e}")
         raise HTTPException(
