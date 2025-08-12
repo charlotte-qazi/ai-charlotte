@@ -18,7 +18,7 @@ import {
   Avatar, 
   CircularProgress 
 } from '@mui/material'
-import { Send as SendIcon, SupportAgent } from '@mui/icons-material'
+import { Send as SendIcon, SupportAgent, Face3 } from '@mui/icons-material'
 import axios from 'axios'
 
 interface OnboardingMessage {
@@ -47,7 +47,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const questions = [
     "Hi there! ✨ I'm Charlotte's AI assistant. Before we dive into learning about her, I'd love to get to know you a bit! What's your name?",
-    "Nice to meet you, {name}! 😊 What brings you here today? Are you exploring AI, curious about my work, testing out chatbots... or maybe it’s Charlotte's mum checking in again? 👀"
+    "Nice to meet you, {name}! 😊 What brings you here today? Are you exploring AI, curious about my work, testing out chatbots... or maybe it's Charlotte's mum checking in again? 👀"
   ]
 
   // Auto-scroll to bottom when new messages arrive
@@ -168,7 +168,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Chat Messages */}
+      {/* Chat Messages - Same structure as main App */}
       <Box
         ref={chatContainerRef}
         sx={{
@@ -251,6 +251,21 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 })}
               </Typography>
             </Paper>
+
+            {message.role === 'user' && (
+              <Avatar
+                sx={{
+                  bgcolor: "primary.light",
+                  color: "primary.main",
+                  width: 36,
+                  height: 36,
+                  mt: 0.5,
+                  fontWeight: 600,
+                }}
+              >
+                <Face3 sx={{ fontSize: 30 }} />
+              </Avatar>
+            )}
           </Box>
         ))}
         
@@ -295,7 +310,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         )}
       </Box>
 
-      {/* Input Area */}
+      {/* Input Area - Same structure as main App */}
       <Box
         sx={{
           p: 3,
