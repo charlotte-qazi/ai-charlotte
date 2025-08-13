@@ -26,11 +26,6 @@ interface SuggestionsPanelProps {
 
 const suggestions = [
   {
-    icon: <WorkIcon />,
-    text: "What is Charlotte's experience at BCG?",
-    category: "Experience"
-  },
-  {
     icon: <CodeIcon />,
     text: "What are Charlotte's technical skills?",
     category: "Skills"
@@ -44,16 +39,6 @@ const suggestions = [
     icon: <GroupsIcon />,
     text: "What leadership experience does Charlotte have?",
     category: "Leadership"
-  },
-  {
-    icon: <LightbulbIcon />,
-    text: "What are your thoughts on building Gen AI for humans?",
-    category: "Insights"
-  },
-  {
-    icon: <TrendingUpIcon />,
-    text: "How did Charlotte transition into tech?",
-    category: "Career"
   }
 ]
 
@@ -69,7 +54,6 @@ const SuggestionsPanel: React.FC<SuggestionsPanelProps> = ({
         overflow: "hidden",
         background: "rgba(255, 255, 255, 0.95)",
         backdropFilter: "blur(10px)",
-        height: "100%",
         p: 3,
         display: "flex",
         flexDirection: "column",
