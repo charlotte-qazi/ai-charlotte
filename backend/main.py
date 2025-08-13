@@ -37,7 +37,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins if not settings.is_production else [
         "https://ai-charlotte.vercel.app",
-        "https://charlotteqazi.co.uk"
+        "https://charlotteqazi.co.uk",
+        "https://www.charlotteqazi.co.uk"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
