@@ -16,6 +16,7 @@ from slowapi.util import get_remote_address
 from backend.schemas.chat import ChatRequest, ChatResponse, CreateUserRequest, CreateUserResponse
 from backend.services.rag_service import RAGService
 from backend.services.supabase_client import SupabaseClient
+from backend.services.moderation import ModerationService
 from backend.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ limiter = Limiter(key_func=get_remote_address)
 # Initialize services
 rag_service = RAGService(collection_name="ai_charlotte")
 supabase_client = SupabaseClient()
+moderation_service = ModerationService()
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -36,9 +38,35 @@ async def chat(request: Request, chat_request: ChatRequest) -> ChatResponse:
     Chat endpoint powered by RAG (Retrieval-Augmented Generation).
     Answers questions about Charlotte Qazi using her CV and documents.
     Enforces a 10-message limit per user.
+    Includes content moderation to ensure safe and appropriate conversations.
     """
     try:
         logger.info(f"💬 Chat request from user {chat_request.user_id}: '{chat_request.message[:100]}...'")
+        
+        # Content moderation check - check user message before processing
+        if moderation_service.is_enabled():
+            moderation_result = await moderation_service.moderate_content(chat_request.message)
+            
+            if moderation_result.is_flagged:
+                logger.warning(f"🚫 Message flagged by moderation: {moderation_result.reason}")
+                
+                # Save the user message for logging purposes
+                await supabase_client.save_user_message(chat_request.user_id, chat_request.message)
+                
+                # Return a polite but firm response
+                moderation_response = (
+                    "I appreciate you reaching out, but I'm designed to have helpful and respectful conversations. "
+                    "Let's keep our chat professional and positive! Is there something specific about Charlotte's "
+                    "background or experience you'd like to know more about?"
+                )
+                
+                # Save the moderation response
+                await supabase_client.save_agent_message(chat_request.user_id, moderation_response)
+                
+                return ChatResponse(
+                    answer=moderation_response,
+                    sources=[]
+                )
         
         # Get user data to check message count
         user_data = await supabase_client.get_user(chat_request.user_id)
@@ -126,8 +154,19 @@ async def create_user(request: Request, user_request: CreateUserRequest) -> Crea
 async def health_check(request: Request):
     """Health check endpoint for the RAG system."""
     try:
-        health_status = await rag_service.health_check()
-        return health_status
+        rag_health = await rag_service.health_check()
+        moderation_health = await moderation_service.health_check()
+        
+        overall_status = "healthy" if (
+            rag_health.get("status") == "healthy" and 
+            moderation_health.get("status") == "healthy"
+        ) else "degraded"
+        
+        return {
+            "status": overall_status,
+            "rag_service": rag_health,
+            "moderation_service": moderation_health
+        }
     except Exception as e:
         logger.error(f"❌ Health check failed: {e}")
         return {"status": "unhealthy", "error": str(e)}
@@ -146,4 +185,6 @@ async def debug_config(request: Request):
         "openai_api_key_set": bool(settings.openai_api_key),
         "supabase_url_set": bool(settings.supabase_url),
         "supabase_key_set": bool(settings.supabase_key),
+        "moderation_enabled": settings.moderation_enabled,
+        "moderation_fail_closed": settings.moderation_fail_closed,
     } 

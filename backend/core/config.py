@@ -48,6 +48,10 @@ class Settings:
     rate_limit_requests: int = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
     rate_limit_window: int = int(os.getenv("RATE_LIMIT_WINDOW", "60"))  # seconds
     
+    # Content Moderation Configuration
+    moderation_enabled: bool = os.getenv("MODERATION_ENABLED", "true").lower() == "true"
+    moderation_fail_closed: bool = os.getenv("MODERATION_FAIL_CLOSED", "false").lower() == "true"  # Whether to block content when moderation API fails
+    
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
