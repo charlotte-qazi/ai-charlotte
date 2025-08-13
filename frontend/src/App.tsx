@@ -21,6 +21,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles"
 import axios from 'axios'
 import OnboardingFlow from './components/OnboardingFlow'
 import ChatContainer, { type ChatMessage } from './components/ChatContainer'
+import SuggestionsPanel from './components/SuggestionsPanel'
 import config from './config'
 
 // Custom theme with Charlotte's brand colors
@@ -174,6 +175,55 @@ function App() {
     }
   }
 
+  const handleSuggestionClick = (message: string) => {
+    setInputValue(message)
+    // Automatically trigger sending the message
+    setTimeout(() => {
+      const userMessage: ChatMessage = {
+        id: messages.length + 1,
+        role: 'user',
+        content: message,
+        timestamp: new Date(),
+      }
+
+      setMessages((prev) => [...prev, userMessage])
+      setLoading(true)
+
+      const sendSuggestedMessage = async () => {
+        try {
+          const resp = await axios.post(`${config.apiBaseUrl}/api/chat`, { 
+            message: message,
+            user_id: sessionId 
+          })
+          const answer: string = resp.data.answer
+          
+          const assistantMessage: ChatMessage = {
+            id: messages.length + 2,
+            role: 'assistant',
+            content: answer,
+            timestamp: new Date(),
+          }
+
+          setMessages((prev) => [...prev, assistantMessage])
+        } catch (error: unknown) {
+          console.error('Chat error:', error)
+          const errorMessage: ChatMessage = {
+            id: messages.length + 2,
+            role: 'assistant',
+            content: 'Sorry, something went wrong. Please try again! 💔',
+            timestamp: new Date(),
+          }
+          setMessages((prev) => [...prev, errorMessage])
+        } finally {
+          setLoading(false)
+          setInputValue("") // Clear the input after sending
+        }
+      }
+
+      sendSuggestedMessage()
+    }, 100) // Small delay to show the message in the input field briefly
+  }
+
   const handleOnboardingComplete = (userId: string, welcomeMessage: string, userName: string) => {
     setSessionId(userId) // Store user ID for future use
     setUserName(userName) // Store user name
@@ -204,7 +254,7 @@ function App() {
         }}
       >
         <Container 
-          maxWidth="md" 
+          maxWidth="lg" 
           sx={{ 
             flex: 1, 
             display: "flex", 
@@ -217,15 +267,41 @@ function App() {
           {!isOnboardingComplete ? (
             <OnboardingFlow onComplete={handleOnboardingComplete} />
           ) : (
-            <ChatContainer
-              messages={messages}
-              inputValue={inputValue}
-              onInputChange={setInputValue}
-              onSendMessage={handleSendMessage}
-              loading={loading}
-              placeholder="Ask me anything about Charlotte's experience, projects, or interests... ✨"
-              loadingText="Thinking..."
-            />
+            <Box sx={{ 
+              display: "flex", 
+              gap: 2, 
+              height: "100%",
+              flexDirection: { xs: "column", md: "row" }
+            }}>
+              {/* Suggestions Panel - Left side on desktop, top on mobile */}
+              <Box sx={{ 
+                flex: { xs: "0 0 auto", md: "0 0 350px" },
+                height: { xs: "200px", md: "100%" },
+                order: { xs: 2, md: 1 }
+              }}>
+                <SuggestionsPanel 
+                  onSuggestionClick={handleSuggestionClick}
+                  disabled={loading}
+                />
+              </Box>
+              
+              {/* Chat Container - Right side on desktop, bottom on mobile */}
+              <Box sx={{ 
+                flex: 1,
+                minHeight: 0,
+                order: { xs: 1, md: 2 }
+              }}>
+                <ChatContainer
+                  messages={messages}
+                  inputValue={inputValue}
+                  onInputChange={setInputValue}
+                  onSendMessage={handleSendMessage}
+                  loading={loading}
+                  placeholder="Ask me anything about Charlotte's experience, projects, or interests... ✨"
+                  loadingText="Thinking..."
+                />
+              </Box>
+            </Box>
           )}
         </Container>
 
