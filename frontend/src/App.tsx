@@ -247,7 +247,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <Box
         sx={{
-          height: "100vh",
+          minHeight: "100vh",
           background: "linear-gradient(135deg, #fff3f7 0%, #ffbed5 100%)",
           display: "flex",
           flexDirection: "column",
@@ -261,7 +261,6 @@ function App() {
             flexDirection: "column",
             p: 2,
             boxSizing: "border-box",
-            height: "100vh",
           }}
         >
           {!isOnboardingComplete ? (
@@ -270,13 +269,14 @@ function App() {
             <Box sx={{ 
               display: "flex", 
               gap: 2, 
-              height: "100%",
+              minHeight: "calc(100vh - 32px)", // Accounting for container padding
               flexDirection: { xs: "column", md: "row" }
             }}>
               {/* Suggestions Panel - Left side on desktop, top on mobile */}
               <Box sx={{ 
                 flex: { xs: "0 0 auto", md: "0 0 350px" },
-                height: { xs: "200px", md: "100%" },
+                height: { xs: "auto", md: "100%" },
+                minHeight: { xs: "160px", md: "unset" },
                 order: { xs: 2, md: 1 }
               }}>
                 <SuggestionsPanel 
@@ -288,7 +288,7 @@ function App() {
               {/* Chat Container - Right side on desktop, bottom on mobile */}
               <Box sx={{ 
                 flex: 1,
-                minHeight: 0,
+                minHeight: { xs: "600px", md: "500px" },
                 order: { xs: 1, md: 2 }
               }}>
                 <ChatContainer

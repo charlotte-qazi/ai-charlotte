@@ -12,11 +12,8 @@ import React from 'react'
 import { Box, Button, Typography, Paper } from '@mui/material'
 import { 
   Psychology as PsychologyIcon,
-  Work as WorkIcon, 
   Code as CodeIcon,
-  Groups as GroupsIcon,
-  Lightbulb as LightbulbIcon,
-  TrendingUp as TrendingUpIcon
+  Groups as GroupsIcon
 } from '@mui/icons-material'
 
 interface SuggestionsPanelProps {
