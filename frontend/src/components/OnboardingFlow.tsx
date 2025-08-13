@@ -19,7 +19,7 @@ interface OnboardingFlowProps {
 
 const questions = [
   "Hi there! ✨ I'm Charlotte's AI assistant. Before we dive into learning about her, I'd love to get to know you a bit! What's your name?",
-  "Nice to meet you, {name}! 😊 What brings you here today? Are you exploring AI, curious about my work, testing out chatbots... or maybe it's Charlotte's mum checking in again? 👀"
+  "Nice to meet you, {name}! 😊 What brings you here today? Are you exploring AI, curious about my work, testing out chatbots... I'd love to hear!"
 ]
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
