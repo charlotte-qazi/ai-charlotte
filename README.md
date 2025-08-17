@@ -4,6 +4,8 @@
 
 A production-ready chatbot that answers questions about Charlotte Qazi's professional background, experience, and skills using Retrieval-Augmented Generation (RAG).
 
+Here's a blog on how I built it - [Building AI-Charlotte: How to build a RAG chatbot in a day] (https://charlotteqazi.medium.com/building-ai-charlotte-how-to-build-a-rag-chatbot-in-a-day-8e924ae50ef6)
+
 **🚀 Ready to run with Charlotte's CV already processed and indexed.**
 
 > **Setting up with your own CV?** See [DEV_SETUP.md](./DEV_SETUP.md) for complete development setup instructions.
