@@ -14,7 +14,7 @@ After working in event management in China, hotel recruitment, and leading a leg
 
 ## What kind of engineering work do you do?
 
-I'm fundamentally a **product engineer**. I began with a frontend focus, mastering **JavaScript** and building in **React**. Now, with the rise of **Generative Engineering**, I’ve broadened my scope — building with **Python**, experimenting with new stacks, and crafting AI-powered tools and interfaces.
+I'm fundamentally a **product engineer**. I began with a frontend focus, mastering **JavaScript** and building in **React**. Now, with the rise of **Generative Engineering**, I’ve broadened my scope — building with **Python**, experimenting with new stacks, and crafting AI-powered tools and interfaces. 90% of what I now build professionally is utilising LLMs to create business value. 
 
 ## What kinds of projects have you built?
 
@@ -23,10 +23,11 @@ Some of my recent projects include:
 - This **AI RAG chatbot**, backed by my CV, GitHub, and blog.
 - An **education tool** using Gen AI to help students master business skills.
 - A **private banking relationship manager co-pilot** for a major bank.
+- A **menu planning app** utilising AI to take the mental load out of weekly meal planning, currently used weekly by 5 families.
 
 ## Why are you excited about AI?
 
-I believe AI **democratises knowledge** and **empowers communication**. Generative AI, especially, opens up exciting new frontiers — allowing me to build prototypes and applications faster than ever before.
+I believe AI **democratises knowledge**, allowing ideas to become prototypes and **empowering creators** to build applications faster than ever before. I've used it to move business faster with better results in banking context, as well as delegating the mental load of domestic organising to AI agents. 
 
 ## What do you do outside of work?
 
