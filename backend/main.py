@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-import secure
+from secure import Secure
 
 from backend.api.routes import router
 from backend.core.config import settings
@@ -21,8 +21,17 @@ from backend.core.config import settings
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
-# Initialize security headers (defaults applied by Secure())
-secure_headers = secure.Secure()
+# secure 2.x (Python 3.10+, e.g. Railway) vs 0.3.x (Python 3.9 local)
+if hasattr(Secure, "with_default_headers"):
+    secure_headers = Secure.with_default_headers()
+
+    async def apply_security_headers(response) -> None:
+        await secure_headers.set_headers_async(response)
+else:
+    secure_headers = Secure()
+
+    async def apply_security_headers(response) -> None:
+        secure_headers.framework.fastapi(response)
 
 # Create FastAPI app
 app = FastAPI(
@@ -54,7 +63,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 async def add_security_headers(request: Request, call_next):
     """Add security headers to all responses."""
     response = await call_next(request)
-    secure_headers.framework.fastapi(response)
+    await apply_security_headers(response)
     return response
 
 # Include API routes

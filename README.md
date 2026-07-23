@@ -13,7 +13,7 @@ Here's a blog on how I built it - [Building AI-Charlotte: How to build a RAG cha
 Local setup needs **four things** working together: Python deps (in a venv), env vars, Supabase tables, and a populated Qdrant collection. Skipping any of these is the usual reason chat fails.
 
 ### Prerequisites
-- Python 3.9+
+- Python 3.9+ (3.10+ recommended; Railway uses 3.12)
 - Node.js 18+ and npm 9+
 - Accounts/keys: OpenAI, Qdrant Cloud, Supabase
 
@@ -378,8 +378,10 @@ Sample evaluation output:
 **`ModuleNotFoundError: No module named 'openai'` (or similar) when running CLI**
 - You are not using the project venv. Run `source .venv/bin/activate` first.
 
-**Backend crash: `Secure` has no attribute `with_default_headers`**
-- Fixed in current code for `secure` 0.3.x. Pull latest / ensure `backend/main.py` uses `secure.Secure()` and `framework.fastapi(response)`.
+**Backend crash / health 500 related to `Secure` / security headers**
+- `secure` 0.3.x (Python 3.9) and 2.x (Python 3.10+) have different APIs. `backend/main.py` supports both.
+- Local (3.9): `pip install 'secure==0.3.0'`
+- Deploy (3.10+): pip installs `secure` 2.x automatically via `secure>=0.3.0`
 
 **Moderation error: invalid model `text-moderation-latest`**
 - OpenAI now expects `omni-moderation-latest` (see `backend/services/moderation/moderator.py`).
