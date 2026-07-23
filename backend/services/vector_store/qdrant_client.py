@@ -24,6 +24,7 @@ class QdrantVectorStore:
         self.client = QdrantClient(
             url=url,
             api_key=api_key,
+            check_compatibility=False,
         )
         self.collection = collection
 
@@ -93,18 +94,18 @@ class QdrantVectorStore:
 
     def query(self, vector: List[float], top_k: int = 5, filter_conditions: Optional[Dict] = None) -> List[Tuple[float, Dict[str, Any]]]:
         """Query nearest neighbors from Qdrant."""
-        search_result = self.client.search(
+        search_result = self.client.query_points(
             collection_name=self.collection,
-            query_vector=vector,
+            query=vector,
             limit=top_k,
-            query_filter=models.Filter(**filter_conditions) if filter_conditions else None
+            query_filter=models.Filter(**filter_conditions) if filter_conditions else None,
         )
-        
+
         # Return (score, payload) tuples
         results = []
-        for hit in search_result:
-            results.append((hit.score, hit.payload))
-        
+        for hit in search_result.points:
+            results.append((hit.score, hit.payload or {}))
+
         return results
 
     def count(self) -> int:

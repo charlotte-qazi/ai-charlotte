@@ -4,71 +4,112 @@
 
 A production-ready chatbot that answers questions about Charlotte Qazi's professional background, experience, and skills using Retrieval-Augmented Generation (RAG).
 
-Here's a blog on how I built it - [Building AI-Charlotte: How to build a RAG chatbot in a day] (https://charlotteqazi.medium.com/building-ai-charlotte-how-to-build-a-rag-chatbot-in-a-day-8e924ae50ef6)
+Here's a blog on how I built it - [Building AI-Charlotte: How to build a RAG chatbot in a day](https://charlotteqazi.medium.com/building-ai-charlotte-how-to-build-a-rag-chatbot-in-a-day-8e924ae50ef6)
 
-**🚀 Ready to run with Charlotte's CV already processed and indexed.**
-
-> **Setting up with your own CV?** See [DEV_SETUP.md](./DEV_SETUP.md) for complete development setup instructions.
+> **Setting up with your own CV?** See [DEV_SETUP.md](./DEV_SETUP.md) for extra detail (chunking options, GitHub/Medium pipelines, tests).
 
 ## Quick Start
+
+Local setup needs **four things** working together: Python deps (in a venv), env vars, Supabase tables, and a populated Qdrant collection. Skipping any of these is the usual reason chat fails.
 
 ### Prerequisites
 - Python 3.9+
 - Node.js 18+ and npm 9+
+- Accounts/keys: OpenAI, Qdrant Cloud, Supabase
 
 ### 1. Installation
 ```bash
 git clone YOUR_GITHUB_REPO_URL ai-charlotte
 cd ai-charlotte
 
-# Backend setup
+# Backend — always use this venv for Python commands
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Frontend setup
+# Frontend
 cd frontend
 npm install
 cd ..
 ```
 
+> **Important:** Activate the venv in every terminal before running backend or CLI commands (`source .venv/bin/activate`). System `python3` will not see packages like `openai` and will fail with `ModuleNotFoundError`.
+
 ### 2. Environment Configuration
 ```bash
-# Create environment file
 cp .env.example .env
 ```
 
-The app will run in demo mode without API keys, but for full functionality, add:
+Fill in `.env` (all of these are required for a working local app):
+
 ```bash
-# Required: For full RAG functionality
+# OpenAI — embeddings + chat + moderation
 OPENAI_API_KEY=your-openai-key
-QDRANT_URL=your-qdrant-url
+
+# Qdrant — vector search
+QDRANT_URL=https://YOUR-CLUSTER.cloud.qdrant.io
 QDRANT_API_KEY=your-qdrant-key
 QDRANT_COLLECTION=ai_charlotte
 
-# Required: For user onboarding and database storage
+# Supabase — users, message limits, chat history
+# URL must match your project ref exactly: https://<project-ref>.supabase.co
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_ANON_KEY=your_anon_key_here
 SUPABASE_SERVICE_KEY=your_service_role_key_here
+
+# Frontend → local backend (use your Railway URL only in production)
+VITE_API_URL=http://127.0.0.1:8000
 ```
 
-> **For Supabase setup:** See the [Database Setup](#database-setup-supabase) section below.
+Notes:
+- `SUPABASE_URL` must match the `ref` in your Supabase JWT. A typo causes DNS errors (`nodename nor servname provided`).
+- Restart the backend after editing `.env` (uvicorn `--reload` does not reliably pick up env changes).
+- There is **no stub/demo mode** for users: missing Supabase credentials will stop the backend from starting correctly.
 
-### 3. Start the Application
+> **Next:** create Supabase tables ([Database Setup](#database-setup-supabase)), then index documents ([Index documents into Qdrant](#3-index-documents-into-qdrant)).
+
+### 3. Index documents into Qdrant
+
+A new Qdrant cluster has **no collections**. Chat retrieval will fail or return empty context until you embed documents.
+
+With the venv active:
+
 ```bash
-# Terminal 1: Start backend
+source .venv/bin/activate
+
+# Chunk source files
+python -m backend.cli.process_cv data/raw/cv.md
+python -m backend.cli.process_qa data/raw/q-and-a.md
+
+# Embed + upsert (uses QDRANT_COLLECTION from .env)
+python -m backend.cli.embed_and_upsert \
+  --input data/processed/cv_chunks.jsonl \
+  --recreate-collection
+
+python -m backend.cli.embed_and_upsert \
+  --input data/processed/q-and-a_qa_chunks.jsonl
+```
+
+You should see a point count in the CLI output (e.g. 22 points after CV + Q&A). That collection name must match `QDRANT_COLLECTION` in `.env`.
+
+### 4. Start the Application
+```bash
+# Terminal 1: Backend (venv required)
 source .venv/bin/activate
 uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 
-# Terminal 2: Start frontend
+# Terminal 2: Frontend
 cd frontend
 npm run dev
 ```
 
-### 4. Use the Chatbot
-- **Web Interface**: Visit `http://localhost:5173`
-- **API**: Send POST requests to `http://127.0.0.1:8000/api/chat`
+On backend startup you want to see Supabase initialized successfully (not credential warnings).
 
+### 5. Use the Chatbot
+- **Web Interface**: Visit `http://localhost:5173`
+- **API**: `http://127.0.0.1:8000` (health: `GET /health`)
+
+Complete onboarding in the UI first so a user row exists in Supabase, then chat.
 ## Example Queries
 
 Try asking Charlotte's chatbot:
@@ -172,14 +213,17 @@ CREATE POLICY "Allow reading messages" ON messages
 ### 4. Test Database Connection
 
 ```bash
-# Start backend server
-PYTHONPATH=/Users/your-username/path-to-project python -m uvicorn backend.main:app --reload --port 8000
+source .venv/bin/activate
+uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+```
 
-# Test user creation
-curl -X POST http://localhost:8000/api/users \
+In another terminal:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/users \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Test User", 
+    "name": "Test User",
     "interests": "Testing the onboarding flow"
   }'
 ```
@@ -331,10 +375,29 @@ Sample evaluation output:
 
 ### Common Issues
 
-**"No relevant contexts found"**
-- Ensure environment variables are set correctly
-- Check that Qdrant collection exists and has data
-- Verify OpenAI API key is valid
+**`ModuleNotFoundError: No module named 'openai'` (or similar) when running CLI**
+- You are not using the project venv. Run `source .venv/bin/activate` first.
+
+**Backend crash: `Secure` has no attribute `with_default_headers`**
+- Fixed in current code for `secure` 0.3.x. Pull latest / ensure `backend/main.py` uses `secure.Secure()` and `framework.fastapi(response)`.
+
+**Moderation error: invalid model `text-moderation-latest`**
+- OpenAI now expects `omni-moderation-latest` (see `backend/services/moderation/moderator.py`).
+
+**Chat 404: `User session not found`**
+- Supabase URL/key wrong or empty, or `users` table missing.
+- Confirm backend log shows Supabase initialized (not stub/credential warnings).
+- Complete onboarding again after fixing `.env` and restarting the backend.
+
+**Supabase DNS / `nodename nor servname provided`**
+- `SUPABASE_URL` typo. It must be `https://<project-ref>.supabase.co` matching Settings → API.
+
+**`'QdrantClient' object has no attribute 'search'`**
+- Current `qdrant-client` uses `query_points` (fixed in retrieval code). Reinstall deps from `requirements.txt` if needed.
+
+**"No relevant contexts" / empty or weak answers**
+- Collection missing or empty, or `QDRANT_COLLECTION` does not match what you upserted into.
+- Re-run the [Index documents into Qdrant](#3-index-documents-into-qdrant) steps.
 
 **Port already in use**
 ```bash
@@ -354,9 +417,10 @@ lsof -i :5173 -t | xargs kill -9  # Frontend
 
 **Supabase connection issues**
 - Ensure `SUPABASE_SERVICE_KEY` is set (not just `SUPABASE_ANON_KEY`)
-- Check that the `users` table exists in your Supabase project
+- Check that the `users` and `messages` tables exist
 - Verify RLS policies allow the required operations
 - Look for initialization errors in server logs
+- Restart uvicorn after changing `.env`
 
 ### Getting Help
 1. Check terminal logs for error messages

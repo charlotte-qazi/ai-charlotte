@@ -8,7 +8,7 @@ For more information, visit: https://github.com/charlotteqazi
 Licensed under the MIT License.
 """
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import logging
 from openai import OpenAI
 from qdrant_client import QdrantClient
@@ -20,12 +20,13 @@ logger = logging.getLogger(__name__)
 
 
 class Retriever:
-    def __init__(self, collection_name: str = "ai_charlotte") -> None:
-        self.collection_name = collection_name
+    def __init__(self, collection_name: Optional[str] = None) -> None:
+        self.collection_name = collection_name or settings.qdrant_collection
         self.openai_client = OpenAI(api_key=settings.openai_api_key)
         self.qdrant_client = QdrantClient(
             url=settings.qdrant_url,
             api_key=settings.qdrant_api_key,
+            check_compatibility=False,
         )
 
     async def retrieve(self, query: str, top_k: int = 5, min_score: float = 0.7) -> List[Dict[str, Any]]:
@@ -50,28 +51,29 @@ class Retriever:
             )
             query_embedding = embedding_response.data[0].embedding
             
-            # Search Qdrant
-            search_results = self.qdrant_client.search(
+            # Search Qdrant (query_points replaced deprecated .search in qdrant-client >=1.12)
+            search_response = self.qdrant_client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_embedding,
+                query=query_embedding,
                 limit=top_k,
                 score_threshold=min_score,
                 with_payload=True,
-                with_vectors=False
+                with_vectors=False,
             )
             
             # Format results
             retrieved_chunks = []
-            for result in search_results:
+            for result in search_response.points:
+                payload = result.payload or {}
                 chunk_data = {
                     "id": result.id,
-                    "text": result.payload.get("text", ""),
-                    "source": result.payload.get("source", ""),
-                    "heading": result.payload.get("heading", ""),
-                    "chunk_type": result.payload.get("chunk_type", ""),
-                    "word_count": result.payload.get("word_count", 0),
+                    "text": payload.get("text", ""),
+                    "source": payload.get("source", ""),
+                    "heading": payload.get("heading", ""),
+                    "chunk_type": payload.get("chunk_type", ""),
+                    "word_count": payload.get("word_count", 0),
                     "score": float(result.score),
-                    "metadata": result.payload.get("metadata", {})
+                    "metadata": payload.get("metadata", {})
                 }
                 retrieved_chunks.append(chunk_data)
             
@@ -96,9 +98,9 @@ class Retriever:
             query_embedding = embedding_response.data[0].embedding
             
             # Search with source filter
-            search_results = self.qdrant_client.search(
+            search_response = self.qdrant_client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_embedding,
+                query=query_embedding,
                 query_filter=Filter(
                     must=[
                         FieldCondition(
@@ -109,19 +111,19 @@ class Retriever:
                 ),
                 limit=top_k,
                 with_payload=True,
-                with_vectors=False
+                with_vectors=False,
             )
             
             return [
                 {
                     "id": result.id,
-                    "text": result.payload.get("text", ""),
-                    "source": result.payload.get("source", ""),
-                    "heading": result.payload.get("heading", ""),
+                    "text": (result.payload or {}).get("text", ""),
+                    "source": (result.payload or {}).get("source", ""),
+                    "heading": (result.payload or {}).get("heading", ""),
                     "score": float(result.score),
-                    "metadata": result.payload.get("metadata", {})
+                    "metadata": (result.payload or {}).get("metadata", {})
                 }
-                for result in search_results
+                for result in search_response.points
             ]
             
         except Exception as e:

@@ -74,7 +74,7 @@ class ModerationService:
             
             response = await self.client.moderations.create(
                 input=content,
-                model="text-moderation-latest"
+                model="omni-moderation-latest"
             )
             
             result = response.results[0]

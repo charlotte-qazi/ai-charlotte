@@ -21,8 +21,8 @@ from backend.core.config import settings
 # Initialize rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
-# Initialize security headers
-secure_headers = secure.Secure.with_default_headers()
+# Initialize security headers (defaults applied by Secure())
+secure_headers = secure.Secure()
 
 # Create FastAPI app
 app = FastAPI(
@@ -54,7 +54,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 async def add_security_headers(request: Request, call_next):
     """Add security headers to all responses."""
     response = await call_next(request)
-    await secure_headers.set_headers_async(response)
+    secure_headers.framework.fastapi(response)
     return response
 
 # Include API routes

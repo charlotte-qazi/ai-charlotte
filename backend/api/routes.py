@@ -26,7 +26,7 @@ router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
 # Initialize services
-rag_service = RAGService(collection_name="ai_charlotte")
+rag_service = RAGService()
 supabase_client = SupabaseClient()
 moderation_service = ModerationService()
 

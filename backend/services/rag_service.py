@@ -8,12 +8,13 @@ For more information, visit: https://github.com/charlotteqazi
 Licensed under the MIT License.
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import logging
 
 from backend.services.retrieval.retriever import Retriever
 from backend.services.generation.generator import AnswerGenerator
 from backend.schemas.chat import ChatResponse, Source
+from backend.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class RAGService:
     Combines retrieval and generation for question answering.
     """
     
-    def __init__(self, collection_name: str = "ai_charlotte") -> None:
-        self.retriever = Retriever(collection_name=collection_name)
+    def __init__(self, collection_name: Optional[str] = None) -> None:
+        self.retriever = Retriever(collection_name=collection_name or settings.qdrant_collection)
         self.generator = AnswerGenerator()
     
     async def answer_question(
